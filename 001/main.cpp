@@ -226,7 +226,7 @@ int main() {
       for(size_t i=0; i<tokens.size(); i++) {
         std::cout << tokens[i].as_string();
         if(i != tokens.size() - 1) {
-          std::cout << ',';
+          std::cout << ", ";
         }
       }
       std::cout << "]\n";
