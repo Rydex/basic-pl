@@ -1,6 +1,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -117,8 +118,8 @@ using token_t = Token<std::string>;
 
 //super long typedef
 using make_tokens_t = std::pair<std::vector<Token<std::string>>, std::optional<Exception>>;
-
 // nodes
+
 struct NumberNode {
   token_t tok;
 
@@ -127,13 +128,100 @@ struct NumberNode {
   }
 };
 
+struct BinOpNode;
+
+using node_t = std::variant<NumberNode, token_t, std::shared_ptr<BinOpNode>>;
+
 struct BinOpNode {
-  BinOpNode* left_node;
+  node_t left_node;
   token_t op_tok;
-  BinOpNode* right_node;
+  node_t right_node;
+
+  std::string as_string() const {
+    // if(std::holds_alternative<token_t>(left_node) && std::holds_alternative<token_t>(right_node)) {
+    //   return '(' + std::get<token_t>(left_node).as_string() + ", " + op_tok.as_string() + ", " + std::get<token_t>(right_node).as_string() + ')';
+    // } else {
+    //   return '(' + std::get<NumberNode>(left_node).as_string() + ", " + op_tok.as_string() + ", " + std::get<NumberNode>(right_node).as_string() + ')';
+    // }
+
+    auto node_to_str = [](const node_t& node) -> std::string {
+      if(std::holds_alternative<NumberNode>(node)) {
+        return std::get<NumberNode>(node).as_string();
+      } else if (std::holds_alternative<token_t>(node)) {
+        return std::get<token_t>(node).as_string();
+      } else {
+        return std::get<std::shared_ptr<BinOpNode>>(node)->as_string();
+      }
+    };
+
+    return '(' + node_to_str(left_node) + ", " + op_tok.as_string() + ", " + node_to_str(right_node) + ')';
+  }
 };
 
 // end of nodes
+
+// parser class
+
+class Parser {
+private:
+  int tok_idx = -1;
+  tokens_t tokens;
+  token_t cur_tok;
+public:
+  Parser(const tokens_t& tokens): tokens(tokens) {
+    advance();
+  }
+
+  token_t advance() {
+    tok_idx++;
+    if(tok_idx < (int)tokens.size()) {
+      cur_tok = tokens.at(tok_idx);
+    }
+    return cur_tok;
+  }
+
+  node_t factor() {
+    token_t tok = cur_tok;
+
+    if(tok.type == INT_T || tok.type == FLT_T) {
+      advance();
+      return NumberNode{tok};
+    }
+  }
+
+  node_t term() {
+    node_t left = factor();
+
+    while(cur_tok.type == MUL_T || cur_tok.type == DIV_T) {
+      token_t op_tok = cur_tok;
+      advance();
+      node_t right = factor();
+      left = std::make_shared<BinOpNode>(left, op_tok, right);
+    }
+
+    return left;
+  }
+
+  node_t expr() {
+    node_t left = term();
+
+    while(cur_tok.type == PLS_T || cur_tok.type == MIN_T) {
+      token_t op_tok = cur_tok;
+      advance();
+      node_t right = term();
+      left = std::make_shared<BinOpNode>(left, op_tok, right);
+    }
+
+    return left;
+  }
+
+  node_t parse() {
+    node_t res = expr();
+    return res;
+  }
+};
+
+// end of parser
 
 // lexer class
 class Lexer {
@@ -218,13 +306,18 @@ public:
   }
 };
 
-make_tokens_t run(const std::string& fn, const std::string& text) {
+std::pair<std::optional<node_t>, std::optional<Exception>> run(const std::string& fn, const std::string& text) {
   // lex the text
   Lexer lex(fn, text);
   // unpack into tokens and error
   const auto&[tokens, error] = lex.make_tokens();
+  if(error) return { std::nullopt, error };
 
-  return {tokens, error};
+  // generate ast
+  Parser parser(tokens);
+  node_t ast = parser.parse();
+
+  return { ast, std::nullopt };
 }
 
 int main() {
@@ -233,20 +326,30 @@ int main() {
     std::cout << "program (type exit to exit) > ";
     std::getline(std::cin, input);
 
-    const auto&[tokens, error] = run("<stdin>", input);
+    const auto&[ast, error] = run("<stdin>", input);
 
     if(error) {
       std::cout << error->as_string() << '\n';
     } else {
-      std::cout << '[';
+      // std::cout << '[';
 
-      for(size_t i=0; i<tokens.size(); i++) {
-        std::cout << tokens[i].as_string();
-        if(i != tokens.size() - 1) {
-          std::cout << ", ";
+      // for(size_t i=0; i<tokens.size(); i++) {
+      //   std::cout << tokens[i].as_string();
+      //   if(i != tokens.size() - 1) {
+      //     std::cout << ", ";
+      //   }
+      // }
+      // std::cout << "]\n";
+
+      if(ast) {
+        if(std::holds_alternative<NumberNode>(ast.value())) {
+          std::cout << std::get<NumberNode>(ast.value()).as_string() << '\n';
+        } else if (std::holds_alternative<token_t>(ast.value())) {
+          std::cout << std::get<token_t>(ast.value()).as_string() << '\n';
+        } else {
+          std::cout << std::get<std::shared_ptr<BinOpNode>>(ast.value())->as_string() << '\n';
         }
       }
-      std::cout << "]\n";
     }
   } while (input != "exit");
 }
