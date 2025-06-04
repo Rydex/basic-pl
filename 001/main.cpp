@@ -48,7 +48,7 @@ private:
   std::string err_name, details;
   Position pos_start, pos_end;
 public:
-  Exception(std::string err_name, std::string details, Position pos_end, Position pos_start)
+  Exception(const std::string& err_name, const std::string& details, const Position& pos_end, const Position& pos_start)
     : err_name(err_name), details(details), pos_start(pos_start), pos_end(pos_end) {}
 
   std::string as_string() const {
@@ -60,7 +60,7 @@ public:
 
 class IllegalCharException : public Exception {
 public:
-  IllegalCharException(const char& details, const Position& pos_start, const Position& pos_end)
+  IllegalCharException(char details, const Position& pos_start, const Position& pos_end)
     : Exception("Illegal Character Exception", "'" + std::string(1, details) + "'", pos_start, pos_end) {}
 };
 
