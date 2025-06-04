@@ -118,6 +118,23 @@ using token_t = Token<std::string>;
 //super long typedef
 using make_tokens_t = std::pair<std::vector<Token<std::string>>, std::optional<Exception>>;
 
+// nodes
+struct NumberNode {
+  token_t tok;
+
+  std::string as_string() const {
+    return tok.as_string();
+  }
+};
+
+struct BinOpNode {
+  BinOpNode* left_node;
+  token_t op_tok;
+  BinOpNode* right_node;
+};
+
+// end of nodes
+
 // lexer class
 class Lexer {
 private:
