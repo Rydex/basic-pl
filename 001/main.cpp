@@ -17,7 +17,7 @@ private:
   int col = 0; // column number
   std::string fn, ftxt; // file name, file text (contents)
 public:
-  Position(int idx, int ln, int col, std::string fn, std::string ftxt): idx(idx), ln(ln), col(col), fn(fn), ftxt(ftxt) {}
+  Position(int idx, int ln, int col, const std::string& fn, const std::string& ftxt): idx(idx), ln(ln), col(col), fn(fn), ftxt(ftxt) {}
 
   Position& advance(char cur_char) {
     idx++;
