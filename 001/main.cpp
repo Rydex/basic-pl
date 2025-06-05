@@ -32,7 +32,7 @@ public:
 
 
 
-  Position copy() {
+  Position copy() const {
     return Position(idx, ln, col, fn, ftxt);
   }
 
@@ -140,6 +140,21 @@ template<typename Type>
 struct Token {
   Type type;
   TokenValue value;
+  std::optional<Position> pos_start;
+  std::optional<Position> pos_end;
+
+  Token(const Type& type, const TokenValue& value = none_t{}, const std::optional<Position>& pos_start = std::nullopt, const std::optional<Position>& pos_end = std::nullopt)
+    : type(type), value(value) {
+      if(pos_start) {
+        this->pos_start = pos_start->copy();
+        this->pos_end = pos_start->copy();
+        this->pos_end->advance(); 
+      }
+
+      if(pos_end) {
+        this->pos_end = pos_end;
+      }
+    }
 
   std::string as_string() const {
     if (std::holds_alternative<none_t>(value)) {
@@ -202,15 +217,31 @@ struct BinOpNode {
 
 // end of nodes
 
+// parse result class
+
+class ParseResult {
+private:
+
+  using __node_t = std::variant<NumberNode, BinOpNode>;
+
+  std::optional<Exception> error;
+  std::optional<std::variant<NumberNode, BinOpNode>> node;
+
+public:
+  // TODO 
+};
+
+// end of parse result class
+
 // parser class
 
 class Parser {
 private:
   int tok_idx = -1;
   tokens_t tokens;
-  token_t cur_tok;
+  std::optional<token_t> cur_tok;
 public:
-  Parser(const tokens_t& tokens): tokens(tokens) {
+  Parser(const tokens_t& tokens): tokens(tokens), cur_tok(std::nullopt) {
     advance();
   }
 
@@ -219,11 +250,11 @@ public:
     if(tok_idx < (int)tokens.size()) {
       cur_tok = tokens.at(tok_idx);
     }
-    return cur_tok;
+    return cur_tok.value();
   }
 
   node_t factor() {
-    token_t tok = cur_tok;
+    token_t tok = cur_tok.value();
 
     if(tok.type == INT_T || tok.type == FLT_T) {
       advance();
@@ -234,8 +265,8 @@ public:
   node_t term() {
     node_t left = factor();
 
-    while(cur_tok.type == MUL_T || cur_tok.type == DIV_T) {
-      token_t op_tok = cur_tok;
+    while(cur_tok->type == MUL_T || cur_tok->type == DIV_T) {
+      token_t op_tok = cur_tok.value();
       advance();
       node_t right = factor();
       left = std::make_shared<BinOpNode>(left, op_tok, right);
@@ -247,8 +278,8 @@ public:
   node_t expr() {
     node_t left = term();
 
-    while(cur_tok.type == PLS_T || cur_tok.type == MIN_T) {
-      token_t op_tok = cur_tok;
+    while(cur_tok->type == PLS_T || cur_tok->type == MIN_T) {
+      token_t op_tok = cur_tok.value();
       advance();
       node_t right = term();
       left = std::make_shared<BinOpNode>(left, op_tok, right);
@@ -290,22 +321,22 @@ public:
     while(cur_char != '\0') {
       if(cur_char == ' ' || cur_char == '\t') { advance();
       } else if(cur_char == '+') {
-        tokens.first.push_back(Token<std::string>{PLS_T, none_t{}});
+        tokens.first.push_back(Token<std::string>(PLS_T));
         advance();
       } else if(cur_char == '-') {
-        tokens.first.push_back(Token<std::string>{MIN_T, none_t{}});
+        tokens.first.push_back(Token<std::string>(MIN_T));
         advance();
       } else if(cur_char == '/') {
-        tokens.first.push_back(Token<std::string>{DIV_T, none_t{}});
+        tokens.first.push_back(Token<std::string>(DIV_T));
         advance();
       } else if(cur_char == '*') {
-        tokens.first.push_back(Token<std::string>{MUL_T, none_t{}});
+        tokens.first.push_back(Token<std::string>(MUL_T));
         advance();
       } else if(cur_char == '(') {
-        tokens.first.push_back(Token<std::string>{LPR_T, none_t{}});
+        tokens.first.push_back(Token<std::string>(LPR_T));
         advance();
       } else if(cur_char == ')') {
-        tokens.first.push_back(Token<std::string>{RPR_T, none_t{}});
+        tokens.first.push_back(Token<std::string>(RPR_T));
         advance();
       } else if((std::isdigit(cur_char) || cur_char == '.') && cur_char != '.') {
         tokens.first.push_back(make_number());
@@ -341,9 +372,9 @@ public:
     }
 
     if(dot_count == 0) {
-      return {INT_T, std::stoi(num_str)};
+      return Token<std::string>(INT_T, std::stoi(num_str));
     } else {
-      return {FLT_T, std::stof(num_str)};
+      return Token<std::string>(FLT_T, std::stof(num_str));
     }
   }
 };
