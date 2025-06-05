@@ -1,5 +1,4 @@
 #include <cctype>
-#include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -31,6 +30,8 @@ public:
     return *this;
   }
 
+
+
   Position copy() {
     return Position(idx, ln, col, fn, ftxt);
   }
@@ -42,26 +43,73 @@ public:
   std::string get_ftxt() const { return ftxt; }
 };
 
+std::string string_with_arrows(const std::string& text, const Position& pos_start, const Position& pos_end) {
+  std::string result;
+
+  size_t idx_start_temp = text.rfind('\n', pos_start.get_idx() - 1);
+  size_t idx_start = (idx_start_temp == std::string::npos) ? 0 : idx_start_temp;
+  size_t idx_end = text.find('\n', idx_start + 1);
+  if (idx_end == std::string::npos) idx_end = text.length();
+
+  int line_count = pos_end.get_ln() - pos_start.get_ln() + 1;
+
+  for (int i = 0; i < line_count; i++) {
+    std::string line = text.substr(idx_start, idx_end - idx_start);
+        
+    int col_start = (i == 0) ? pos_start.get_col() : 0;
+    int col_end = (i == line_count - 1) ? pos_end.get_col() : line.length() - 1;
+        
+    if (col_end < 0 || col_end >= (int)line.length()) {
+      col_end = line.length() - 1;
+    }
+    if (col_start > col_end) {
+      col_start = col_end;
+    }
+
+    result += line + '\n';
+    result += std::string(col_start, ' ') + std::string(std::max(1, col_end - col_start), '^');
+
+    idx_start = idx_end;
+    if (idx_start < text.length()) {
+      idx_end = text.find('\n', idx_start + 1);
+      if (idx_end == std::string::npos) idx_end = text.length();
+    }
+  }
+
+  std::string final_result;
+  for (char c : result) {
+    final_result += (c == '\t') ? ' ' : c;
+  }
+
+  return final_result;
+}
+
 // base class exception
 class Exception {
 private:
-  std::string err_name, details;
   Position pos_start, pos_end;
+  std::string err_name, details;
 public:
-  Exception(const std::string& err_name, const std::string& details, const Position& pos_end, const Position& pos_start)
-    : err_name(err_name), details(details), pos_start(pos_start), pos_end(pos_end) {}
+  Exception(const Position& pos_start, const Position& pos_end, const std::string& err_name, const std::string& details)
+    : pos_start(pos_start), pos_end(pos_end), err_name(err_name), details(details) {}
 
   std::string as_string() const {
     std::string res = err_name + ": " + details;
     res += " File " + pos_start.get_fn() + ", line " + std::to_string(pos_start.get_ln() + 1);
+    res += "\n\n" + string_with_arrows(pos_start.get_ftxt(), pos_start, pos_end);
     return res;
   }
 };
 
 class IllegalCharException : public Exception {
 public:
-  IllegalCharException(char details, const Position& pos_start, const Position& pos_end)
-    : Exception("Illegal Character Exception", "'" + std::string(1, details) + "'", pos_start, pos_end) {}
+  IllegalCharException(const Position& pos_start, const Position& pos_end, char details)
+    : Exception(pos_start, pos_end, "Illegal Character Exception", "'" + std::string(1, details) + "'") {}
+};
+
+class IllegalSyntaxException : public Exception {
+  IllegalSyntaxException(const Position& pos_start, const Position& pos_end, const std::string& details = "")
+    : Exception(pos_start, pos_end, "Invalid Syntax Exception", details) {}
 };
 
 // constants
@@ -267,7 +315,7 @@ public:
         advance();
         return std::make_pair(
           std::vector<Token<std::string>>(),
-          IllegalCharException(ch, pos_start, pos)
+          IllegalCharException(pos_start, pos, ch)
         );
       }
     }
