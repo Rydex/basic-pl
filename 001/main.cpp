@@ -85,12 +85,6 @@ struct value_t {
   // int token : 123
 };
 
-// partially specialize value_t in the case if T is a none_t, value will be std::nullopt
-template<>
-struct value_t<none_t> {
-  std::optional<none_t> value = std::nullopt;
-};
-
 using TokenValue = std::variant<none_t, int, double>;
 
 // struct to represent tokens
