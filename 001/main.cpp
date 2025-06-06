@@ -18,7 +18,7 @@ private:
 public:
   Position(int idx, int ln, int col, const std::string& fn, const std::string& ftxt): idx(idx), ln(ln), col(col), fn(fn), ftxt(ftxt) {}
 
-  Position& advance(char cur_char) {
+  Position& advance(char cur_char = '\0') {
     idx++;
     col++;
 
@@ -122,6 +122,7 @@ const std::string MUL_T = "MULTIPLY";
 const std::string DIV_T = "DIVIDE";
 const std::string LPR_T = "LPAREN";
 const std::string RPR_T = "RPAREN";
+const std::string EOF_T = "EOF";
 
 // struct for representing a none type
 struct none_t {};
@@ -149,7 +150,7 @@ struct Token {
       if(pos_start) {
         this->pos_start = pos_start->copy();
         this->pos_end = pos_start->copy();
-        // this->pos_end->advance(); 
+        this->pos_end->advance(); 
       }
 
       if(pos_end) {
@@ -249,6 +250,8 @@ public:
 
 // end of parse result class
 
+using parseresult_t = std::variant<node_t, ParseResult>;
+
 // parser class
 
 class Parser {
@@ -256,8 +259,6 @@ private:
   int tok_idx = -1;
   tokens_t tokens;
   std::optional<token_t> cur_tok;
-
-  using parseresult_t = std::variant<node_t, ParseResult>;
 public:
   Parser(const tokens_t& tokens): tokens(tokens), cur_tok(std::nullopt) {
     advance();
@@ -289,7 +290,8 @@ public:
   parseresult_t term() {
     ParseResult res;
     auto __get_node_t = [&]() -> node_t {
-      return std::get<node_t>(res.register_(std::get<node_t>(factor())));
+      if(std::holds_alternative<node_t>(res.register_(std::get<node_t>(factor()))))
+        return std::get<node_t>(res.register_(std::get<node_t>(factor())));
     };
     node_t left = __get_node_t();
     if (res.error)
@@ -307,25 +309,36 @@ public:
     return res.success(left);
   }
 
-  node_t expr() {
+  parseresult_t expr() {
     ParseResult res;
     auto __get_node_t = [&]() -> node_t {
-      return std::get<node_t>(res.register_(std::get<node_t>(term())));
+      if(std::holds_alternative<node_t>(res.register_(std::get<node_t>(term()))))
+        return std::get<node_t>(res.register_(std::get<node_t>(term())));
     };
     node_t left = __get_node_t();
 
     while(cur_tok->type == PLS_T || cur_tok->type == MIN_T) {
       token_t op_tok = cur_tok.value();
       advance();
-      node_t right = std::get<node_t>(term());
+      node_t right = __get_node_t();
+      if (res.error)
+        return res;
       left = std::make_shared<BinOpNode>(left, op_tok, right);
     }
 
-    return left;
+    return res.success(left);
   }
 
-  node_t parse() {
-    node_t res = expr();
+  parseresult_t parse() {
+    ParseResult res;
+    if(std::holds_alternative<ParseResult>(expr()))
+      ParseResult res = std::get<ParseResult>(expr());
+    if(!res.error && cur_tok->type != EOF_T) {
+      return res.failure(InvalidSyntaxException(
+        cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+        "Expected '+', '-', '*', or '/'"
+      ));
+    }
     return res;
   }
 };
@@ -357,22 +370,22 @@ public:
     while(cur_char != '\0') {
       if(cur_char == ' ' || cur_char == '\t') { advance();
       } else if(cur_char == '+') {
-        tokens.first.push_back(Token<std::string>(PLS_T));
+        tokens.first.push_back(Token<std::string>(PLS_T, none_t{}, pos));
         advance();
       } else if(cur_char == '-') {
-        tokens.first.push_back(Token<std::string>(MIN_T));
+        tokens.first.push_back(Token<std::string>(MIN_T, none_t{}, pos));
         advance();
       } else if(cur_char == '/') {
-        tokens.first.push_back(Token<std::string>(DIV_T));
+        tokens.first.push_back(Token<std::string>(DIV_T, none_t{}, pos));
         advance();
       } else if(cur_char == '*') {
-        tokens.first.push_back(Token<std::string>(MUL_T));
+        tokens.first.push_back(Token<std::string>(MUL_T, none_t{}, pos));
         advance();
       } else if(cur_char == '(') {
-        tokens.first.push_back(Token<std::string>(LPR_T));
+        tokens.first.push_back(Token<std::string>(LPR_T, none_t{}, pos));
         advance();
       } else if(cur_char == ')') {
-        tokens.first.push_back(Token<std::string>(RPR_T));
+        tokens.first.push_back(Token<std::string>(RPR_T, none_t{}, pos));
         advance();
       } else if((std::isdigit(cur_char) || cur_char == '.') && cur_char != '.') {
         tokens.first.push_back(make_number());
@@ -386,6 +399,7 @@ public:
         );
       }
     }
+    tokens.first.push_back(Token<std::string>(EOF_T, none_t{}, pos));
     return std::make_pair(
       tokens.first,
       std::nullopt
@@ -395,6 +409,7 @@ public:
   Token<std::string> make_number() {
     std::string num_str = "";
     int dot_count = 0;
+    Position pos_start = pos.copy();
 
     while(cur_char != '\0' && (std::isdigit(cur_char) || cur_char == '.')) {
       if (cur_char == '.') {
@@ -408,9 +423,9 @@ public:
     }
 
     if(dot_count == 0) {
-      return Token<std::string>(INT_T, std::stoi(num_str));
+      return Token<std::string>(INT_T, std::stoi(num_str), pos_start, pos);
     } else {
-      return Token<std::string>(FLT_T, std::stof(num_str));
+      return Token<std::string>(FLT_T, std::stof(num_str), pos_start, pos);
     }
   }
 };
@@ -424,9 +439,9 @@ std::pair<std::optional<node_t>, std::optional<Exception>> run(const std::string
 
   // generate ast
   Parser parser(tokens);
-  node_t ast = parser.parse();
+  parseresult_t ast = parser.parse();
 
-  return { ast, std::nullopt };
+  return { std::get<ParseResult>(ast).node.value(), std::get<ParseResult>(ast).error.value() };
 }
 
 int main() {
