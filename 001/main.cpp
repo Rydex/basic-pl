@@ -107,8 +107,9 @@ public:
     : Exception(pos_start, pos_end, "Illegal Character Exception", "'" + std::string(1, details) + "'") {}
 };
 
-class IllegalSyntaxException : public Exception {
-  IllegalSyntaxException(const Position& pos_start, const Position& pos_end, const std::string& details = "")
+class InvalidSyntaxException : public Exception {
+public:
+  InvalidSyntaxException(const Position& pos_start, const Position& pos_end, const std::string& details = "")
     : Exception(pos_start, pos_end, "Invalid Syntax Exception", details) {}
 };
 
@@ -218,26 +219,23 @@ struct BinOpNode {
 // parse result class
 
 class ParseResult {
-private:
-
-  using __node_t = std::variant<NumberNode, BinOpNode>;
-
-  std::optional<Exception> error = std::nullopt;
-  std::optional<__node_t> node = std::nullopt;
-
 public:
-  token_t register_(const std::variant<token_t, std::unique_ptr<ParseResult>>& res) {
+  std::optional<Exception> error = std::nullopt;
+  std::optional<node_t> node = std::nullopt;
+  std::variant<token_t, node_t> register_(const std::variant<token_t, node_t, std::unique_ptr<ParseResult>>& res) {
     if(std::holds_alternative<std::unique_ptr<ParseResult>>(res)) {
       if(std::is_same_v<decltype(std::get<std::unique_ptr<ParseResult>>(res)), decltype(*this)>) {
         if(std::get<std::unique_ptr<ParseResult>>(res)->error)
           this->error = std::get<std::unique_ptr<ParseResult>>(res)->error;
       }
+    } else if (std::holds_alternative<node_t>(res)) {
+      return std::get<node_t>(res);
     }
 
     return std::get<token_t>(res);
   }
 
-  ParseResult& success(const __node_t& node) {
+  ParseResult& success(const node_t& node) {
     this->node = node;
     return *this;
   }
@@ -258,6 +256,8 @@ private:
   int tok_idx = -1;
   tokens_t tokens;
   std::optional<token_t> cur_tok;
+
+  using parseresult_t = std::variant<node_t, ParseResult>;
 public:
   Parser(const tokens_t& tokens): tokens(tokens), cur_tok(std::nullopt) {
     advance();
@@ -271,35 +271,53 @@ public:
     return cur_tok.value();
   }
 
-  node_t factor() {
+  parseresult_t factor() {
+    ParseResult res;
     token_t tok = cur_tok.value();
 
     if(tok.type == INT_T || tok.type == FLT_T) {
-      advance();
-      return NumberNode{tok};
+      res.register_(advance());
+      return res.success(NumberNode{tok});
     }
+
+    return res.failure(InvalidSyntaxException(
+      tok.pos_start.value(), tok.pos_end.value(),
+      "Expected int or float"
+    ));
   }
 
-  node_t term() {
-    node_t left = factor();
+  parseresult_t term() {
+    ParseResult res;
+    auto __get_node_t = [&]() -> node_t {
+      return std::get<node_t>(res.register_(std::get<node_t>(factor())));
+    };
+    node_t left = __get_node_t();
+    if (res.error)
+      return res;
 
     while(cur_tok->type == MUL_T || cur_tok->type == DIV_T) {
       token_t op_tok = cur_tok.value();
-      advance();
-      node_t right = factor();
+      res.register_(advance());
+      node_t right = __get_node_t();
+      if (res.error)
+        return res;
       left = std::make_shared<BinOpNode>(left, op_tok, right);
     }
 
-    return left;
+    return res.success(left);
   }
 
   node_t expr() {
-    node_t left = term();
+    ParseResult res;
+    auto __get_node_t = [&]() -> node_t {
+      return std::get<node_t>(res.register_(std::get<node_t>(term())));
+    };
+    node_t left = __get_node_t();
 
     while(cur_tok->type == PLS_T || cur_tok->type == MIN_T) {
       token_t op_tok = cur_tok.value();
       advance();
-      node_t right = term();
+      node_t right = std::get<node_t>(term());
       left = std::make_shared<BinOpNode>(left, op_tok, right);
     }
 
