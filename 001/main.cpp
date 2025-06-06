@@ -148,7 +148,7 @@ struct Token {
       if(pos_start) {
         this->pos_start = pos_start->copy();
         this->pos_end = pos_start->copy();
-        this->pos_end->advance(); 
+        // this->pos_end->advance(); 
       }
 
       if(pos_end) {
@@ -187,7 +187,7 @@ struct NumberNode {
 
 struct BinOpNode;
 
-using node_t = std::variant<NumberNode, token_t, std::shared_ptr<BinOpNode>>;
+using node_t = std::variant<NumberNode, std::shared_ptr<BinOpNode>>;
 
 struct BinOpNode {
   node_t left_node;
@@ -204,8 +204,6 @@ struct BinOpNode {
     auto node_to_str = [](const node_t& node) -> std::string {
       if(std::holds_alternative<NumberNode>(node)) {
         return std::get<NumberNode>(node).as_string();
-      } else if (std::holds_alternative<token_t>(node)) {
-        return std::get<token_t>(node).as_string();
       } else {
         return std::get<std::shared_ptr<BinOpNode>>(node)->as_string();
       }
@@ -225,10 +223,11 @@ private:
   using __node_t = std::variant<NumberNode, BinOpNode>;
 
   std::optional<Exception> error;
-  std::optional<std::variant<NumberNode, BinOpNode>> node;
+  std::optional<__node_t> node;
 
 public:
-  // TODO 
+  
+   
 };
 
 // end of parse result class
@@ -417,8 +416,6 @@ int main() {
       if(ast) {
         if(std::holds_alternative<NumberNode>(ast.value())) {
           std::cout << std::get<NumberNode>(ast.value()).as_string() << '\n';
-        } else if (std::holds_alternative<token_t>(ast.value())) {
-          std::cout << std::get<token_t>(ast.value()).as_string() << '\n';
         } else {
           std::cout << std::get<std::shared_ptr<BinOpNode>>(ast.value())->as_string() << '\n';
         }
