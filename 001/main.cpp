@@ -18,7 +18,7 @@ private:
 public:
   Position(int idx, int ln, int col, const std::string& fn, const std::string& ftxt): idx(idx), ln(ln), col(col), fn(fn), ftxt(ftxt) {}
 
-  Position& advance(char cur_char) {
+  Position& advance(char cur_char = '\0') {
     idx++;
     col++;
 
@@ -148,7 +148,7 @@ struct Token {
       if(pos_start) {
         this->pos_start = pos_start->copy();
         this->pos_end = pos_start->copy();
-        // this->pos_end->advance(); 
+        this->pos_end->advance(); 
       }
 
       if(pos_end) {
