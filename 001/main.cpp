@@ -221,20 +221,21 @@ class ParseResult {
 private:
 
   using __node_t = std::variant<NumberNode, BinOpNode>;
+  using __unique_res = std::unique_ptr<ParseResult>;
 
   std::optional<Exception> error = std::nullopt;
   std::optional<__node_t> node = std::nullopt;
 
-public:
-  token_t register_(const std::variant<token_t, std::unique_ptr<ParseResult>>& res) {
-    if(std::holds_alternative<std::unique_ptr<ParseResult>>(res)) {
-      if(std::is_same_v<decltype(std::get<std::unique_ptr<ParseResult>>(res)), decltype(*this)>) {
-        if(std::get<std::unique_ptr<ParseResult>>(res)->error)
-          this->error = std::get<std::unique_ptr<ParseResult>>(res)->error;
-      }
+  std::variant<std::optional<__node_t>, NumberNode, BinOpNode> _register(const std::variant<__unique_res, NumberNode, BinOpNode>& res) {
+    if(std::holds_alternative<__unique_res>(res)) {
+      if(std::get<__unique_res>(res)->error)
+        this->error = std::get<__unique_res>(res)->error;
+      return std::get<__unique_res>(res)->node;
+    } else if(std::holds_alternative<NumberNode>(res)) {
+      return std::get<NumberNode>(res);
+    } else {
+      return std::get<BinOpNode>(res);
     }
-
-    return std::get<token_t>(res);
   }
 
   ParseResult& success(const __node_t& node) {
@@ -246,7 +247,6 @@ public:
     this->error = error;
     return *this;
   }
-   
 };
 
 // end of parse result class
