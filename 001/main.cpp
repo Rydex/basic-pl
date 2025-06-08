@@ -1,4 +1,5 @@
 #include <cctype>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -107,8 +108,8 @@ public:
     : Exception(pos_start, pos_end, "Illegal Character Exception", "'" + std::string(1, details) + "'") {}
 };
 
-class IllegalSyntaxException : public Exception {
-  IllegalSyntaxException(const Position& pos_start, const Position& pos_end, const std::string& details = "")
+class InvalidSyntaxException : public Exception {
+  InvalidSyntaxException(const Position& pos_start, const Position& pos_end, const std::string& details = "")
     : Exception(pos_start, pos_end, "Invalid Syntax Exception", details) {}
 };
 
@@ -219,26 +220,27 @@ struct BinOpNode {
 
 class ParseResult {
 private:
-
-  using __node_t = std::variant<NumberNode, BinOpNode>;
-  using __unique_res = std::unique_ptr<ParseResult>;
-
+  using __node_t = std::variant<BinOpNode, NumberNode>;
+  using __register_t = std::variant<BinOpNode, NumberNode, ParseResult>;
   std::optional<Exception> error = std::nullopt;
   std::optional<__node_t> node = std::nullopt;
+public:
 
-  std::variant<std::optional<__node_t>, NumberNode, BinOpNode> _register(const std::variant<__unique_res, NumberNode, BinOpNode>& res) {
-    if(std::holds_alternative<__unique_res>(res)) {
-      if(std::get<__unique_res>(res)->error)
-        this->error = std::get<__unique_res>(res)->error;
-      return std::get<__unique_res>(res)->node;
-    } else if(std::holds_alternative<NumberNode>(res)) {
-      return std::get<NumberNode>(res);
-    } else {
-      return std::get<BinOpNode>(res);
+  __register_t register_(const __register_t& res) {
+    if(std::holds_alternative<ParseResult>(res)) { // check if res is another parseresult
+      decltype(error) other_err = std::get<ParseResult>(res).error; // if so get error and
+      decltype(node) other_node = std::get<ParseResult>(res).node; // the node
+      if(other_err) this->error = other_err; // if res has an error set this->error to that error
+      if(std::holds_alternative<BinOpNode>(other_node.value())) // if the node of the res if a BinOpNode
+        return std::get<BinOpNode>(other_node.value()); // return it
+      else // do the same here but for NumberNode
+        return std::get<NumberNode>(other_node.value());
     }
+
+    return res;
   }
 
-  ParseResult& success(const __node_t& node) {
+  ParseResult& success(const std::optional<__node_t>& node) {
     this->node = node;
     return *this;
   }
@@ -247,6 +249,7 @@ private:
     this->error = error;
     return *this;
   }
+
 };
 
 // end of parse result class
@@ -281,28 +284,25 @@ public:
   }
 
   node_t term() {
-    node_t left = factor();
-
-    while(cur_tok->type == MUL_T || cur_tok->type == DIV_T) {
-      token_t op_tok = cur_tok.value();
-      advance();
-      node_t right = factor();
-      left = std::make_shared<BinOpNode>(left, op_tok, right);
-    }
-
-    return left;
+    return bin_op(std::vector<std::string>{PLS_T, MIN_T}, [this]() { return factor(); });
   }
 
   node_t expr() {
-    node_t left = term();
+    return bin_op(std::vector<std::string>{DIV_T, MUL_T}, [this]() { return term(); });
+  }
 
-    while(cur_tok->type == PLS_T || cur_tok->type == MIN_T) {
-      token_t op_tok = cur_tok.value();
-      advance();
-      node_t right = term();
-      left = std::make_shared<BinOpNode>(left, op_tok, right);
+  node_t bin_op(const std::vector<std::string>& ops, const std::function<node_t()>& func) {
+    node_t left = func();
+
+    for(size_t i=0; i<ops.size(); i++) {
+      while(cur_tok->type == ops.at(i)) {
+        token_t op_tok = cur_tok.value();
+        advance();
+        node_t right = func();
+        left = std::make_shared<BinOpNode>(left, op_tok, right);
+      }
     }
-
+    
     return left;
   }
 
