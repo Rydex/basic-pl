@@ -10,7 +10,7 @@ Exception::Exception(
 
 std::string Exception::as_string() const {
 	std::string result = message + ": " + details;
-	result += " File " + pos_start.get_fn() + ", line " + std::to_string(pos_start.get_ln() + 1);
+	result += "\nFile " + pos_start.get_fn() + ", line " + std::to_string(pos_start.get_ln());
 	return result;
 }
 
