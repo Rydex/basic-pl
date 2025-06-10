@@ -2,19 +2,30 @@
 #define EXCEPTION
 
 #include <string>
+#include "position.h"
 
 class Exception {
 private:
+	Position pos_start, pos_end;
 	std::string message, details;
 public:
-	Exception(const std::string& message, const std::string& details);
+	Exception(
+		const Position& pos_start,
+		const Position& pos_end,
+		const std::string& message,
+		const std::string& details
+	);
 
 	std::string as_string() const;
 };
 
 class IllegalCharException : public Exception {
 public:
-	IllegalCharException(char ch);
+	IllegalCharException(
+		const Position& pos_start,
+		const Position& pos_end,
+		char ch
+	);
 };
 
 #endif

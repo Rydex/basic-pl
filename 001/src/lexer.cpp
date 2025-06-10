@@ -1,12 +1,12 @@
 #include "lexer.h"
 
-Lexer::Lexer(const std::string& text): text(text) {
+Lexer::Lexer(const std::string& fn, const std::string& text): fn(fn), text(text) {
 	advance();
 }
 
 void Lexer::advance() {
-	position++;
-  cur_char = (position < (int)text.size()) ? text[position] : '\0';
+	pos.advance(cur_char);
+  cur_char = (pos.get_idx() < (int)text.size()) ? text[pos.get_idx()] : '\0';
 }
 
 token_pair Lexer::make_tokens() {
@@ -36,9 +36,10 @@ token_pair Lexer::make_tokens() {
       } else if ((std::isdigit(cur_char) || cur_char == '.') && cur_char != '.') {
         tokens.push_back(make_number());
       } else {
+        Position pos_start = pos.copy();
         char ch = cur_char;
         advance();
-        return { std::vector<Token>{}, IllegalCharException(ch) };
+        return { std::vector<Token>{}, IllegalCharException(pos_start, pos, ch) };
       }
     }
 
@@ -69,8 +70,8 @@ Token Lexer::make_number() {
   }
 }
 
-token_pair run(const std::string& text) {
-	Lexer lexer(text);
+token_pair run(const std::string& fn, const std::string& text) {
+	Lexer lexer(fn, text);
 
   const auto&[tokens, error] = lexer.make_tokens();
 

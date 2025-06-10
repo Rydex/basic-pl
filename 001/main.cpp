@@ -7,7 +7,7 @@ int main() {
     std::cout << "program (type exit to exit) > ";
     std::getline(std::cin, input);
 
-    const auto&[tokens, error] = run(input);
+    const auto&[tokens, error] = run("<stdin>", input);
 
     if(error) {
       std::cout << error->as_string() << '\n';

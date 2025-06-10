@@ -6,6 +6,7 @@
 #include <utility>
 #include "exception.h"
 #include "token.h"
+#include "position.h"
 
 const std::string PLS_T = "PLUS",
 									MIN_T = "MINUS",
@@ -20,17 +21,17 @@ using token_pair = std::pair<std::vector<Token>, std::optional<Exception>>;
 
 class Lexer {
 private:
-	int position = -1;
+	std::string fn, text;
+	Position pos{-1, 0, -1, fn, text};
 	char cur_char = '\0';
-	std::string text;
 public:
-	Lexer(const std::string& text);
+	Lexer(const std::string& fn, const std::string& text);
 
 	void advance();
 	token_pair make_tokens();
 	Token make_number();
 };
 
-token_pair run(const std::string& text);
+token_pair run(const std::string& fn, const std::string& text);
 
 #endif
