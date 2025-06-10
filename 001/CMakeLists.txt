@@ -12,15 +12,17 @@ add_executable(${PROJECT_NAME}
     src/token.cpp
     src/exception.cpp
     src/position.cpp
+    src/parser.cpp
 )
 add_library(mylib
     src/lexer.cpp
     src/token.cpp
     src/exception.cpp
     src/position.cpp
-    src/lexer.h
+    src/parser.cpp
     src/token.h
     src/exception.h
     src/position.h
+    src/parser.h
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE mylib)

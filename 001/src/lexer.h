@@ -7,6 +7,7 @@
 #include "exception.h"
 #include "token.h"
 #include "position.h"
+#include "parser.h"
 
 const std::string PLS_T = "PLUS",
 									MIN_T = "MINUS",
@@ -32,6 +33,8 @@ public:
 	Token make_number();
 };
 
-token_pair run(const std::string& fn, const std::string& text);
+using ast_pair = std::pair<std::optional<NodeVariant>, std::optional<Exception>>;
+
+ast_pair run(const std::string& fn, const std::string& text);
 
 #endif

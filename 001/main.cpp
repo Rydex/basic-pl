@@ -1,4 +1,5 @@
 #include <iostream>
+#include <variant>
 #include "src/lexer.h"
 
 int main() {
@@ -7,22 +8,34 @@ int main() {
     std::cout << "program (type exit to exit) > ";
     std::getline(std::cin, input);
 
-    const auto&[tokens, error] = run("<stdin>", input);
+    const auto&[ast, error] = run("<stdin>", input);
+
+    // if(error) {
+    //   std::cout << error->as_string() << '\n';
+    // } else {
+    //   std::cout << '[';
+
+    //   for(size_t i=0; i<tokens.size(); ++i) {
+    //     std::cout << tokens[i].as_string();
+
+    //     if(i != tokens.size()-1) {
+    //       std::cout << ", ";
+    //     }
+    //   }
+
+    //   std::cout << "]\n";
+    // }
 
     if(error) {
-      std::cout << error->as_string() << '\n';
+      std::cout << error->as_string() << '\n'; 
     } else {
-      std::cout << '[';
-
-      for(size_t i=0; i<tokens.size(); ++i) {
-        std::cout << tokens[i].as_string();
-
-        if(i != tokens.size()-1) {
-          std::cout << ", ";
+      if(ast) {
+        if(std::holds_alternative<NumberNode>(ast.value())) {
+          std::cout << std::get<NumberNode>(ast.value()).as_string();
+        } else {
+          std::cout << std::get<std::shared_ptr<BinOpNode>>(ast.value())->as_string() << '\n';
         }
       }
-
-      std::cout << "]\n";
     }
   } while (input != "exit");
 }

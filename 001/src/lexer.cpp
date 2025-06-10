@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "parser.h"
 
 Lexer::Lexer(const std::string& fn, const std::string& text): fn(fn), text(text) {
 	advance();
@@ -70,10 +71,14 @@ Token Lexer::make_number() {
   }
 }
 
-token_pair run(const std::string& fn, const std::string& text) {
+ast_pair run(const std::string& fn, const std::string& text) {
 	Lexer lexer(fn, text);
 
   const auto&[tokens, error] = lexer.make_tokens();
+  if(error) return { std::nullopt, error };
 
-  return { tokens, error };
+  Parser parser(tokens);
+  NodeVariant ast = parser.parse();
+
+  return { ast, std::nullopt };
 }
