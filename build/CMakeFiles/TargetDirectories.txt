@@ -1,4 +1,0 @@
-C:/Users/Administrator/Documents/Programs/C++/basic-pl/build/CMakeFiles/basicpl.dir
-C:/Users/Administrator/Documents/Programs/C++/basic-pl/build/CMakeFiles/mylib.dir
-C:/Users/Administrator/Documents/Programs/C++/basic-pl/build/CMakeFiles/edit_cache.dir
-C:/Users/Administrator/Documents/Programs/C++/basic-pl/build/CMakeFiles/rebuild_cache.dir
