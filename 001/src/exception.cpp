@@ -11,6 +11,11 @@ Exception::Exception(
 std::string Exception::as_string() const {
   std::string result = message + ": " + details;
   result += "\nFile " + pos_start.get_fn() + ", line " + std::to_string(pos_start.get_ln() + 1);
+  result += "\n\n" + string_with_arrows(
+    pos_start.get_ftxt(),
+    pos_start,
+    pos_end
+  );
   return result;
 }
 
