@@ -30,7 +30,7 @@ Token Parser::advance() {
 	}
 
 	return cur_tok.value();
-}
+} 
 
 NodeVariant Parser::parse() {
 	NodeVariant res = expr();
@@ -53,22 +53,20 @@ NodeVariant Parser::term() {
 		Token op_tok = cur_tok.value();
 		advance();
 		NodeVariant right = factor();
-		if(std::holds_alternative<std::shared_ptr<BinOpNode>>(left))
-			left = std::make_shared<BinOpNode>(std::get<std::shared_ptr<BinOpNode>>(left), op_tok, right);
+		left = std::make_shared<BinOpNode>(left, op_tok, right);
 	}
 
 	return left;
 }
 
 NodeVariant Parser::expr() {
-	NodeVariant left = factor();
+	NodeVariant left = term();
 
 	while(cur_tok->type == PLS_T || cur_tok->type == MIN_T) {
 		Token op_tok = cur_tok.value();
 		advance();
 		NodeVariant right = factor();
-		if(std::holds_alternative<std::shared_ptr<BinOpNode>>(left))
-			left = std::make_shared<BinOpNode>(std::get<std::shared_ptr<BinOpNode>>(left), op_tok, right);
+		left = std::make_shared<BinOpNode>(left, op_tok, right);
 	}
 
 	return left;
