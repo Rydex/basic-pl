@@ -81,7 +81,7 @@ ASTPair run(const std::string& fn, const std::string& text) {
   if(error) return { std::nullopt, error };
 
   Parser parser(tokens);
-  NodeVariant ast = parser.parse();
+  ParseResult ast = parser.parse();
 
-  return { ast, std::nullopt };
+  return { ast.node, ast.error };
 }

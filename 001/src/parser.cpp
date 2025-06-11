@@ -63,6 +63,8 @@ Token Parser::advance() {
   tok_idx++;
   if(tok_idx < (int)tokens.size()) {
     cur_tok = tokens.at(tok_idx);
+  } else {
+    cur_tok = Token(EOF_T, std::nullopt, tokens.back().pos_end.value());
   }
 
   return cur_tok.value();
@@ -101,7 +103,7 @@ ParseResult Parser::term() {
 }
 
 ParseResult Parser::expr() {
-  return bin_op({ DIV_T, MUL_T }, [this]() { return term(); });
+  return bin_op({ PLS_T, MIN_T }, [this]() { return term(); });
 }
 
 ParseResult Parser::bin_op(
@@ -118,7 +120,7 @@ ParseResult Parser::bin_op(
   if(res.error) return res;
 
   for(size_t i=0; i<ops.size(); i++) {
-    while(cur_tok->type == ops.at(i)) {
+    while(cur_tok && cur_tok->type == ops.at(i)) {
       Token op_tok = cur_tok.value();
       res.register_(advance());
       std::variant<NodeVariant, ParseResult> right;
@@ -136,10 +138,10 @@ ParseResult Parser::bin_op(
           std::get<NodeVariant>(right)
         );
       }
-
-      return res.success(std::get<NodeVariant>(left));
     }
   }
+
+  return res.success(std::get<NodeVariant>(left));
 }
 
 // end parser
