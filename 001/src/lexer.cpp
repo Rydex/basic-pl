@@ -80,5 +80,5 @@ ast_pair run(const std::string& fn, const std::string& text) {
   Parser parser(tokens);
   NodeVariant ast = parser.parse();
 
-  return { ast, std::nullopt };
+  return { std::move(ast), std::nullopt };
 }

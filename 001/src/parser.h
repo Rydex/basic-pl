@@ -17,7 +17,7 @@ struct NumberNode {
 
 struct BinOpNode;
 
-using NodeVariant = std::variant<NumberNode, std::shared_ptr<BinOpNode>>;
+using NodeVariant = std::variant<NumberNode, std::unique_ptr<BinOpNode>>;
 
 struct BinOpNode {
   NodeVariant left_node;

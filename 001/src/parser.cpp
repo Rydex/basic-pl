@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "lexer.h"
+#include <utility>
 #include <variant>
 
 std::string NumberNode::as_string() const {
@@ -11,7 +12,7 @@ std::string BinOpNode::as_string() const {
     if(std::holds_alternative<NumberNode>(node)) {
       return std::get<NumberNode>(node).as_string();
     } else {
-      return std::get<std::shared_ptr<BinOpNode>>(node)->as_string();
+      return std::get<std::unique_ptr<BinOpNode>>(node)->as_string();
     }
   };
 
@@ -53,7 +54,7 @@ NodeVariant Parser::term() {
     Token op_tok = cur_tok.value();
     advance();
     NodeVariant right = factor();
-    left = std::make_shared<BinOpNode>(left, op_tok, right);
+    left = std::make_unique<BinOpNode>(std::move(left), op_tok, std::move(right));
   }
 
   return left;
@@ -66,7 +67,7 @@ NodeVariant Parser::expr() {
     Token op_tok = cur_tok.value();
     advance();
     NodeVariant right = term();
-    left = std::make_shared<BinOpNode>(left, op_tok, right);
+    left = std::make_unique<BinOpNode>(std::move(left), op_tok, std::move(right));
   }
 
   return left;

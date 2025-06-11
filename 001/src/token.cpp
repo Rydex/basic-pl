@@ -1,7 +1,21 @@
 #include "token.h"
 
-Token::Token(const std::string& type, const std::optional<TokenValue>& value)
-  : type(type), value(value) {}
+Token::Token(
+  const std::string& type,
+  const std::optional<TokenValue>& value,
+  const std::optional<Position>& pos_start,
+  const std::optional<Position>& pos_end
+): type(type), value(value) {
+  if(pos_start) {
+    this->pos_start = pos_start->copy();
+    this->pos_end = pos_start->copy();
+    this->pos_end->advance();
+  }
+
+  if(pos_end) {
+    this->pos_end = pos_end;
+  }
+}
 
 std::string Token::as_string() const {
   if(!value) {
