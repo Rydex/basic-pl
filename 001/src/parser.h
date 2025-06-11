@@ -10,9 +10,9 @@
 // nodes
 
 struct NumberNode {
-	std::optional<Token> tok;
+  std::optional<Token> tok;
 
-	std::string as_string() const;
+  std::string as_string() const;
 };
 
 struct BinOpNode;
@@ -20,11 +20,11 @@ struct BinOpNode;
 using NodeVariant = std::variant<NumberNode, std::shared_ptr<BinOpNode>>;
 
 struct BinOpNode {
-	NodeVariant left_node;
-	Token op_tok;
-	NodeVariant right_node;
+  NodeVariant left_node;
+  Token op_tok;
+  NodeVariant right_node;
 
-	std::string as_string() const;
+  std::string as_string() const;
 };
 
 // end nodes
@@ -33,18 +33,18 @@ struct BinOpNode {
 
 class Parser {
 private:
-	std::vector<Token> tokens;
-	std::optional<Token> cur_tok;
-	int tok_idx = -1;
+  std::vector<Token> tokens;
+  std::optional<Token> cur_tok;
+  int tok_idx = -1;
 
 public:
-	Parser(const std::vector<Token>& tokens);
+  Parser(const std::vector<Token>& tokens);
 
-	Token advance();
-	NodeVariant parse();
-	NodeVariant factor();
-	NodeVariant term();
-	NodeVariant expr();
+  Token advance();
+  NodeVariant parse();
+  NodeVariant factor();
+  NodeVariant term();
+  NodeVariant expr();
 };
 
 // end parser

@@ -2,16 +2,16 @@
 #include "parser.h"
 
 Lexer::Lexer(const std::string& fn, const std::string& text): fn(fn), text(text) {
-	advance();
+  advance();
 }
 
 void Lexer::advance() {
-	pos.advance(cur_char);
+  pos.advance(cur_char);
   cur_char = (pos.get_idx() < (int)text.size()) ? text[pos.get_idx()] : '\0';
 }
 
 token_pair Lexer::make_tokens() {
-	std::vector<Token> tokens{};
+  std::vector<Token> tokens{};
 
     while(cur_char != '\0') {
       if(cur_char == '\t' || cur_char == ' ') {
@@ -48,7 +48,7 @@ token_pair Lexer::make_tokens() {
 }
 
 Token Lexer::make_number() {
-	std::string num_str = "";
+  std::string num_str = "";
   int dot_count = 0;
 
   while(cur_char != '\0' && (std::isdigit(cur_char) || cur_char == '.')) {
@@ -72,7 +72,7 @@ Token Lexer::make_number() {
 }
 
 ast_pair run(const std::string& fn, const std::string& text) {
-	Lexer lexer(fn, text);
+  Lexer lexer(fn, text);
 
   const auto&[tokens, error] = lexer.make_tokens();
   if(error) return { std::nullopt, error };

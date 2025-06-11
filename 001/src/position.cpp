@@ -1,22 +1,22 @@
 #include "position.h"
 
 Position::Position(int idx, int ln, int col, const std::string& fn, const std::string& ftxt)
-	: idx(idx), ln(ln), col(col), fn(fn), ftxt(ftxt) {}
+  : idx(idx), ln(ln), col(col), fn(fn), ftxt(ftxt) {}
 
 Position& Position::advance(char cur_char) {
-	idx++;
-	col++;
+  idx++;
+  col++;
 
-	if(cur_char == '\n') {
-		ln++;
-		col = 0;
-	}
+  if(cur_char == '\n') {
+    ln++;
+    col = 0;
+  }
 
-	return *this;
+  return *this;
 }
 
 Position Position::copy() const {
-	return Position(idx, ln, col, fn, ftxt);
+  return Position(idx, ln, col, fn, ftxt);
 }
 
 int Position::get_col() const { return col; }
