@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include "parser.h"
+#include "position.h"
 
 Lexer::Lexer(const std::string& fn, const std::string& text): fn(fn), text(text) {
   advance();
@@ -17,25 +18,25 @@ token_pair Lexer::make_tokens() {
       if(cur_char == '\t' || cur_char == ' ') {
         advance();
       } else if (cur_char == '+') {
-        tokens.push_back(Token(PLS_T));
+        tokens.emplace_back(PLS_T, std::nullopt, pos);
         advance();
       } else if (cur_char == '-') {
-        tokens.push_back(Token(MIN_T));
+        tokens.emplace_back(MIN_T, std::nullopt, pos);
         advance();
       } else if (cur_char == '*') {
-        tokens.push_back(Token(MUL_T));
+        tokens.emplace_back(MUL_T, std::nullopt, pos);
         advance();
       } else if (cur_char == '/') {
-        tokens.push_back(Token(DIV_T));
+        tokens.emplace_back(DIV_T, std::nullopt, pos);
         advance();
       } else if (cur_char == '(') {
-        tokens.push_back(Token(LPR_T));
+        tokens.emplace_back(LPR_T, std::nullopt, pos);
         advance();
       } else if (cur_char == ')') {
-        tokens.push_back(Token(RPR_T));
+        tokens.emplace_back(RPR_T, std::nullopt, pos);
         advance();
       } else if ((std::isdigit(cur_char) || cur_char == '.') && cur_char != '.') {
-        tokens.push_back(make_number());
+        tokens.emplace_back(make_number());
       } else {
         Position pos_start = pos.copy();
         char ch = cur_char;
@@ -44,12 +45,14 @@ token_pair Lexer::make_tokens() {
       }
     }
 
+    tokens.push_back(Token(EOF_T));
     return { tokens, std::nullopt };
 }
 
 Token Lexer::make_number() {
   std::string num_str = "";
   int dot_count = 0;
+  Position pos_start = pos.copy();
 
   while(cur_char != '\0' && (std::isdigit(cur_char) || cur_char == '.')) {
     if(cur_char == '.') {
@@ -65,9 +68,9 @@ Token Lexer::make_number() {
   }
 
   if(dot_count == 0) {
-    return Token(INT_T, std::stoi(num_str));
+    return Token(INT_T, std::stoi(num_str), pos_start, pos);
   } else {
-    return Token(FLT_T, std::stof(num_str));
+    return Token(FLT_T, std::stof(num_str), pos_start, pos);
   }
 }
 

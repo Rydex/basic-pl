@@ -16,7 +16,8 @@ const std::string PLS_T = "PLUS",
                   LPR_T = "LPAREN",
                   RPR_T = "RPAREN",
                   INT_T = "INT",
-                  FLT_T = "FLOAT";
+                  FLT_T = "FLOAT",
+                  EOF_T = "EOF";
 
 using token_pair = std::pair<std::vector<Token>, std::optional<Exception>>;
 

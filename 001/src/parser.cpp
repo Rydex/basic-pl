@@ -68,8 +68,16 @@ Token Parser::advance() {
   return cur_tok.value();
 }
 
-NodeVariant Parser::parse() {
-  NodeVariant res = expr();
+ParseResult Parser::parse() {
+  ParseResult res = expr();
+
+  if(!res.error && cur_tok->type != EOF_T) {
+    return res.failure(InvalidSyntaxException(
+      cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+      "expected '+', '-', '*' or '/'"
+    ));
+  }
+
   return res;
 }
 
