@@ -5,7 +5,7 @@ Position::Position(int idx, int ln, int col, const std::string& fn, const std::s
 
 Position& Position::advance(char cur_char) {
 	idx++;
-	ln++;
+	col++;
 
 	if(cur_char == '\n') {
 		ln++;

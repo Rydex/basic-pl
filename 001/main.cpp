@@ -31,7 +31,7 @@ int main() {
     } else {
       if(ast) {
         if(std::holds_alternative<NumberNode>(ast.value())) {
-          std::cout << std::get<NumberNode>(ast.value()).as_string();
+          std::cout << std::get<NumberNode>(ast.value()).as_string() << '\n';
         } else {
           std::cout << std::get<std::shared_ptr<BinOpNode>>(ast.value())->as_string() << '\n';
         }

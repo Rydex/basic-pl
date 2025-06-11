@@ -19,7 +19,7 @@ std::string BinOpNode::as_string() const {
 						 + node_to_str(right_node) + ')';
 }
 
-Parser::Parser(const std::vector<Token>& tokens): cur_tok(std::nullopt) {
+Parser::Parser(const std::vector<Token>& tokens): tokens(tokens), cur_tok(std::nullopt) {
 	advance();
 }
 
@@ -65,7 +65,7 @@ NodeVariant Parser::expr() {
 	while(cur_tok->type == PLS_T || cur_tok->type == MIN_T) {
 		Token op_tok = cur_tok.value();
 		advance();
-		NodeVariant right = factor();
+		NodeVariant right = term();
 		left = std::make_shared<BinOpNode>(left, op_tok, right);
 	}
 
