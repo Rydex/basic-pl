@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "exception.h"
 #include "lexer.h"
 #include <variant>
 
@@ -30,9 +31,24 @@ RegisterVariant ParseResult::register_(const RegisterVariant& res) {
     const ParseResult& other = std::get<ParseResult>(res);
 
     if(other.error) this->error = other.error;
+    if(std::holds_alternative<NumberNode>(other.node.value())) {
+      return std::get<NumberNode>(other.node.value());
+    } else {
+      return std::get<std::shared_ptr<BinOpNode>>(other.node.value());
+    }
   }
 
   return res;
+}
+
+ParseResult& ParseResult::success(const NodeVariant& node) {
+  this->node = node;
+  return *this;
+}
+
+ParseResult& ParseResult::failure(const std::optional<Exception>& error) {
+  this->error = error;
+  return *this;
 }
 
 // end parse result
@@ -57,40 +73,65 @@ NodeVariant Parser::parse() {
   return res;
 }
 
-NodeVariant Parser::factor() {
+ParseResult Parser::factor() {
   ParseResult res;
   Token tok = cur_tok.value();
 
   if(tok.type == INT_T || tok.type == FLT_T) {
     res.register_(advance());
-    return NumberNode{tok};
+    return res.success(NumberNode{tok});
   }
+
+  return res.failure(InvalidSyntaxException(
+    tok.pos_start.value(), tok.pos_end.value(),
+    "expected int or float"
+  ));
 }
 
-NodeVariant Parser::term() {
-  NodeVariant left = factor();
-
-  while(cur_tok->type == MUL_T || cur_tok->type == DIV_T) {
-    Token op_tok = cur_tok.value();
-    advance();
-    NodeVariant right = factor();
-    left = std::make_shared<BinOpNode>(left, op_tok, right);
-  }
-
-  return left;
+ParseResult Parser::term() {
+  return bin_op({ MUL_T, DIV_T }, [this]() { return factor(); });
 }
 
-NodeVariant Parser::expr() {
-  NodeVariant left = term();
+ParseResult Parser::expr() {
+  return bin_op({ DIV_T, MUL_T }, [this]() { return term(); });
+}
 
-  while(cur_tok->type == PLS_T || cur_tok->type == MIN_T) {
-    Token op_tok = cur_tok.value();
-    advance();
-    NodeVariant right = term();
-    left = std::make_shared<BinOpNode>(left, op_tok, right);
+ParseResult Parser::bin_op(
+  const std::vector<std::string>& ops,
+  const std::function<ParseResult()>& func
+) {
+  ParseResult res;
+  RegisterVariant func_register = res.register_(func());
+  std::variant<NodeVariant, ParseResult> left;
+
+  if(std::holds_alternative<ParseResult>(func_register))
+    left = std::get<ParseResult>(func_register);
+
+  if(res.error) return res;
+
+  for(size_t i=0; i<ops.size(); i++) {
+    while(cur_tok->type == ops.at(i)) {
+      Token op_tok = cur_tok.value();
+      res.register_(advance());
+      std::variant<NodeVariant, ParseResult> right;
+
+      if(std::holds_alternative<ParseResult>(func_register))
+        right = std::get<ParseResult>(func_register);
+
+      if(res.error) return res;
+
+      if(std::holds_alternative<NodeVariant>(left) &&
+        std::holds_alternative<NodeVariant>(right)) {
+        left = std::make_shared<BinOpNode>(
+          std::get<NodeVariant>(left),
+          op_tok,
+          std::get<NodeVariant>(right)
+        );
+      }
+
+      return res.success(std::get<NodeVariant>(left));
+    }
   }
-
-  return left;
 }
 
 // end parser

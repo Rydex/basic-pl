@@ -1,6 +1,7 @@
 #ifndef PARSER
 #define PARSER
 
+#include <functional>
 #include <memory>
 #include <optional>
 #include <variant>
@@ -30,6 +31,8 @@ struct BinOpNode {
 
 // end nodes
 
+class ParseResult;
+
 // parser class
 
 class Parser {
@@ -42,13 +45,16 @@ public:
   Parser(const std::vector<Token>& tokens);
 
   Token advance();
-  NodeVariant parse();
-  NodeVariant factor();
-  NodeVariant term();
-  NodeVariant expr();
+  ParseResult parse();
+  ParseResult factor();
+  ParseResult term();
+  ParseResult expr();
+  ParseResult bin_op(
+    const std::vector<std::string>& ops,
+    const std::function<ParseResult()>& func
+  );
 };
 
-class ParseResult;
 
 using RegisterVariant = std::variant<
   ParseResult,
