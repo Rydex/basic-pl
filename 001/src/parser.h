@@ -6,6 +6,7 @@
 #include <variant>
 #include <vector>
 #include "token.h"
+#include "exception.h"
 
 // nodes
 
@@ -17,7 +18,7 @@ struct NumberNode {
 
 struct BinOpNode;
 
-using NodeVariant = std::variant<NumberNode, std::unique_ptr<BinOpNode>>;
+using NodeVariant = std::variant<NumberNode, std::shared_ptr<BinOpNode>>;
 
 struct BinOpNode {
   NodeVariant left_node;
@@ -45,6 +46,24 @@ public:
   NodeVariant factor();
   NodeVariant term();
   NodeVariant expr();
+};
+
+class ParseResult;
+
+using RegisterVariant = std::variant<
+  ParseResult,
+  NumberNode,
+  std::shared_ptr<BinOpNode>,
+  Token
+>;
+
+class ParseResult {
+public:
+  std::optional<Exception> error = std::nullopt;
+  std::optional<NodeVariant> node = std::nullopt;
+  RegisterVariant register_(const RegisterVariant& res);
+  ParseResult& success(const NodeVariant& node);
+  ParseResult& failure(const std::optional<Exception>& error);
 };
 
 // end parser

@@ -71,7 +71,7 @@ Token Lexer::make_number() {
   }
 }
 
-ast_pair run(const std::string& fn, const std::string& text) {
+ASTPair run(const std::string& fn, const std::string& text) {
   Lexer lexer(fn, text);
 
   const auto&[tokens, error] = lexer.make_tokens();
@@ -80,5 +80,5 @@ ast_pair run(const std::string& fn, const std::string& text) {
   Parser parser(tokens);
   NodeVariant ast = parser.parse();
 
-  return { std::move(ast), std::nullopt };
+  return { ast, std::nullopt };
 }

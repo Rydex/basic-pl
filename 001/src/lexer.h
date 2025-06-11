@@ -33,8 +33,8 @@ public:
   Token make_number();
 };
 
-using ast_pair = std::pair<std::optional<NodeVariant>, std::optional<Exception>>;
+using ASTPair = std::pair<std::optional<NodeVariant>, std::optional<Exception>>;
 
-ast_pair run(const std::string& fn, const std::string& text);
+ASTPair run(const std::string& fn, const std::string& text);
 
 #endif

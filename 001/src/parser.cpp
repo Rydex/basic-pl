@@ -1,7 +1,8 @@
 #include "parser.h"
 #include "lexer.h"
-#include <utility>
 #include <variant>
+
+// nodes
 
 std::string NumberNode::as_string() const {
   return tok->as_string();
@@ -12,13 +13,31 @@ std::string BinOpNode::as_string() const {
     if(std::holds_alternative<NumberNode>(node)) {
       return std::get<NumberNode>(node).as_string();
     } else {
-      return std::get<std::unique_ptr<BinOpNode>>(node)->as_string();
+      return std::get<std::shared_ptr<BinOpNode>>(node)->as_string();
     }
   };
 
   return '(' + node_to_str(left_node) + ", " + op_tok.as_string() + ", "
              + node_to_str(right_node) + ')';
 }
+
+// end nodes
+
+// parse result
+
+RegisterVariant ParseResult::register_(const RegisterVariant& res) {
+  if(std::holds_alternative<ParseResult>(res)) { // check if res is another parseresult
+    const ParseResult& other = std::get<ParseResult>(res);
+
+    if(other.error) this->error = other.error;
+  }
+
+  return res;
+}
+
+// end parse result
+
+// parser
 
 Parser::Parser(const std::vector<Token>& tokens): tokens(tokens), cur_tok(std::nullopt) {
   advance();
@@ -31,7 +50,7 @@ Token Parser::advance() {
   }
 
   return cur_tok.value();
-} 
+}
 
 NodeVariant Parser::parse() {
   NodeVariant res = expr();
@@ -39,10 +58,11 @@ NodeVariant Parser::parse() {
 }
 
 NodeVariant Parser::factor() {
+  ParseResult res;
   Token tok = cur_tok.value();
 
   if(tok.type == INT_T || tok.type == FLT_T) {
-    advance();
+    res.register_(advance());
     return NumberNode{tok};
   }
 }
@@ -54,7 +74,7 @@ NodeVariant Parser::term() {
     Token op_tok = cur_tok.value();
     advance();
     NodeVariant right = factor();
-    left = std::make_unique<BinOpNode>(std::move(left), op_tok, std::move(right));
+    left = std::make_shared<BinOpNode>(left, op_tok, right);
   }
 
   return left;
@@ -67,8 +87,10 @@ NodeVariant Parser::expr() {
     Token op_tok = cur_tok.value();
     advance();
     NodeVariant right = term();
-    left = std::make_unique<BinOpNode>(std::move(left), op_tok, std::move(right));
+    left = std::make_shared<BinOpNode>(left, op_tok, right);
   }
 
   return left;
 }
+
+// end parser
