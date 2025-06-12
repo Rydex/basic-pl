@@ -5,20 +5,18 @@
 
 // nodes
 
-std::string UnaryOpNode::as_string() const {
-  auto node_to_str = [](const NodeVariant& node) -> std::string {
-    if(std::holds_alternative<NumberNode>(node)) {
-      return std::get<NumberNode>(node).as_string();
-    } else if (std::holds_alternative<
-      std::shared_ptr<BinOpNode>
-    >(node)) {
-      return std::get<std::shared_ptr<BinOpNode>>(node)->as_string();
-    } else {
-      return std::get<std::shared_ptr<UnaryOpNode>>(node)->as_string();
-    }
-  };
+std::string stringify_node(const NodeVariant& node) {
+  if(std::holds_alternative<NumberNode>(node)) {
+    return std::get<NumberNode>(node).as_string();
+  } else if(std::holds_alternative<SharedBin>(node)) {
+    return std::get<SharedBin>(node)->as_string();
+  } else {
+    return std::get<SharedUnary>(node)->as_string();
+  }
+}
 
-  return '(' + op_tok.as_string() + ", " + node_to_str(node) + ')';
+std::string UnaryOpNode::as_string() const {
+  return '(' + op_tok.as_string() + ", " + stringify_node(node) + ')';
 }
 
 std::string NumberNode::as_string() const {
@@ -26,16 +24,8 @@ std::string NumberNode::as_string() const {
 }
 
 std::string BinOpNode::as_string() const {
-  auto node_to_str = [](const NodeVariant& node) -> std::string {
-    if(std::holds_alternative<NumberNode>(node)) {
-      return std::get<NumberNode>(node).as_string();
-    } else {
-      return std::get<std::shared_ptr<BinOpNode>>(node)->as_string();
-    }
-  };
-
-  return '(' + node_to_str(left_node) + ", " + op_tok.as_string() + ", "
-             + node_to_str(right_node) + ')';
+  return '(' + stringify_node(left_node) + ", " + op_tok.as_string() + ", "
+             + stringify_node(right_node) + ')';
 }
 
 // end nodes
@@ -49,8 +39,10 @@ RegisterVariant ParseResult::register_(const RegisterVariant& res) {
     if(other.error) this->error = other.error;
     if(std::holds_alternative<NumberNode>(other.node.value())) {
       return std::get<NumberNode>(other.node.value());
+    } else if (std::holds_alternative<SharedBin>(other.node.value())) {
+      return std::get<SharedBin>(other.node.value());
     } else {
-      return std::get<std::shared_ptr<BinOpNode>>(other.node.value());
+      return std::get<SharedUnary>(other.node.value());
     }
   }
 
@@ -101,9 +93,32 @@ ParseResult Parser::factor() {
   ParseResult res;
   Token tok = cur_tok.value();
 
-  if(tok.type == INT_T || tok.type == FLT_T) {
+  if(tok.type == PLS_T || tok.type == MIN_T) {
+    res.register_(advance());
+    ParseResult factor_res = factor();
+
+    if(factor_res.error) return factor_res;
+
+    return res.success(std::make_shared<UnaryOpNode>(tok, factor_res.node.value()));
+
+  } else if(tok.type == INT_T || tok.type == FLT_T) {
     res.register_(advance());
     return res.success(NumberNode{tok});
+  } else if(tok.type == LPR_T) {
+    res.register_(advance());
+    ParseResult expr_res = expr();
+
+    if(expr_res.error) return expr_res;
+
+    if(cur_tok->type == RPR_T) {
+      res.register_(advance());
+      return res.success(expr_res.node.value());
+    } else {
+      return res.failure(InvalidSyntaxException(
+        cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+        "expected ')'"
+      ));
+    }
   }
 
   return res.failure(InvalidSyntaxException(

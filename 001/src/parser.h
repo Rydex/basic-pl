@@ -20,11 +20,17 @@ struct NumberNode {
 struct BinOpNode;
 struct UnaryOpNode;
 
+// helpers
+using SharedBin = std::shared_ptr<BinOpNode>;
+using SharedUnary = std::shared_ptr<UnaryOpNode>;
+
 using NodeVariant = std::variant<
   NumberNode,
-  std::shared_ptr<UnaryOpNode>,
-  std::shared_ptr<BinOpNode>
+  SharedUnary,
+  SharedBin
 >;
+
+std::string stringify_node(const NodeVariant& node);
 
 struct BinOpNode {
   NodeVariant left_node;
@@ -67,12 +73,12 @@ public:
   );
 };
 
-
 using RegisterVariant = std::variant<
   ParseResult,
   NumberNode,
-  std::shared_ptr<BinOpNode>,
-  Token
+  SharedBin,
+  Token,
+  SharedUnary
 >;
 
 class ParseResult {
