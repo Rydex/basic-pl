@@ -32,8 +32,10 @@ int main() {
       if(ast) { // if theres ast print the value as string
         if(std::holds_alternative<NumberNode>(ast.value())) {
           std::cout << std::get<NumberNode>(ast.value()).as_string() << '\n';
+        } else if(std::holds_alternative<SharedUnary>(ast.value())) {
+          std::cout << std::get<SharedUnary>(ast.value())->as_string() << '\n';
         } else {
-          std::cout << std::get<std::shared_ptr<BinOpNode>>(ast.value())->as_string() << '\n';
+          std::cout << std::get<SharedBin>(ast.value())->as_string() << '\n';
         }
       }
     }

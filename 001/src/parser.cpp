@@ -8,10 +8,10 @@
 std::string stringify_node(const NodeVariant& node) {
   if(std::holds_alternative<NumberNode>(node)) {
     return std::get<NumberNode>(node).as_string();
-  } else if(std::holds_alternative<SharedBin>(node)) {
-    return std::get<SharedBin>(node)->as_string();
-  } else {
+  } else if(std::holds_alternative<SharedUnary>(node)) {
     return std::get<SharedUnary>(node)->as_string();
+  } else {
+    return std::get<SharedBin>(node)->as_string();
   }
 }
 
