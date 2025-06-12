@@ -63,8 +63,6 @@ Token Parser::advance() {
   tok_idx++;
   if(tok_idx < (int)tokens.size()) {
     cur_tok = tokens.at(tok_idx);
-  } else {
-    cur_tok = Token(EOF_T, std::nullopt, tokens.back().pos_end.value());
   }
 
   return cur_tok.value();
@@ -111,37 +109,26 @@ ParseResult Parser::bin_op(
   const std::function<ParseResult()>& func
 ) {
   ParseResult res;
-  RegisterVariant func_register = res.register_(func());
-  std::variant<NodeVariant, ParseResult> left;
+  ParseResult left_res = func();
 
-  if(std::holds_alternative<ParseResult>(func_register))
-    left = std::get<ParseResult>(func_register);
-
-  if(res.error) return res;
+  if(left_res.error) return left_res;
+  NodeVariant left = left_res.node.value();
 
   for(size_t i=0; i<ops.size(); i++) {
     while(cur_tok && cur_tok->type == ops.at(i)) {
       Token op_tok = cur_tok.value();
       res.register_(advance());
-      std::variant<NodeVariant, ParseResult> right;
+      ParseResult right_res = func();
 
-      if(std::holds_alternative<ParseResult>(func_register))
-        right = std::get<ParseResult>(func_register);
+      if(right_res.error) return right_res;
 
-      if(res.error) return res;
+      NodeVariant right = right_res.node.value();
 
-      if(std::holds_alternative<NodeVariant>(left) &&
-        std::holds_alternative<NodeVariant>(right)) {
-        left = std::make_shared<BinOpNode>(
-          std::get<NodeVariant>(left),
-          op_tok,
-          std::get<NodeVariant>(right)
-        );
-      }
+      left = std::make_shared<BinOpNode>(left, op_tok, right);
     }
-  }
 
-  return res.success(std::get<NodeVariant>(left));
+  }
+  return res.success(left);
 }
 
 // end parser
