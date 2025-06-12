@@ -5,6 +5,22 @@
 
 // nodes
 
+std::string UnaryOpNode::as_string() const {
+  auto node_to_str = [](const NodeVariant& node) -> std::string {
+    if(std::holds_alternative<NumberNode>(node)) {
+      return std::get<NumberNode>(node).as_string();
+    } else if (std::holds_alternative<
+      std::shared_ptr<BinOpNode>
+    >(node)) {
+      return std::get<std::shared_ptr<BinOpNode>>(node)->as_string();
+    } else {
+      return std::get<std::shared_ptr<UnaryOpNode>>(node)->as_string();
+    }
+  };
+
+  return '(' + op_tok.as_string() + ", " + node_to_str(node) + ')';
+}
+
 std::string NumberNode::as_string() const {
   return tok->as_string();
 }
@@ -129,7 +145,7 @@ ParseResult Parser::bin_op(
       // a shared binopnode pointer consisting of the 3 elements
     }
   }
-  
+
   return res.success(left);
 }
 

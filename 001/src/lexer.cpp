@@ -80,8 +80,9 @@ ASTPair run(const std::string& fn, const std::string& text) {
   const auto&[tokens, error] = lexer.make_tokens();
   if(error) return { std::nullopt, error };
 
+  // generate ast
   Parser parser(tokens);
   ParseResult ast = parser.parse();
 
-  return { ast.node, ast.error };
+  return { ast.node, ast.error }; // return the node/error of the ast
 }

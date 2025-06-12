@@ -26,10 +26,10 @@ int main() {
     //   std::cout << "]\n";
     // }
 
-    if(error) {
+    if(error) { // if theres an error print it as string
       std::cout << error->as_string() << '\n'; 
     } else {
-      if(ast) {
+      if(ast) { // if theres ast print the value as string
         if(std::holds_alternative<NumberNode>(ast.value())) {
           std::cout << std::get<NumberNode>(ast.value()).as_string() << '\n';
         } else {

@@ -18,13 +18,25 @@ struct NumberNode {
 };
 
 struct BinOpNode;
+struct UnaryOpNode;
 
-using NodeVariant = std::variant<NumberNode, std::shared_ptr<BinOpNode>>;
+using NodeVariant = std::variant<
+  NumberNode,
+  std::shared_ptr<UnaryOpNode>,
+  std::shared_ptr<BinOpNode>
+>;
 
 struct BinOpNode {
   NodeVariant left_node;
   Token op_tok;
   NodeVariant right_node;
+
+  std::string as_string() const;
+};
+
+struct UnaryOpNode {
+  Token op_tok;
+  NodeVariant node;
 
   std::string as_string() const;
 };
