@@ -45,7 +45,7 @@ token_pair Lexer::make_tokens() {
       }
     }
 
-    tokens.push_back(Token(EOF_T));
+    tokens.emplace_back(EOF_T, std::nullopt, pos);
     return { tokens, std::nullopt };
 }
 
