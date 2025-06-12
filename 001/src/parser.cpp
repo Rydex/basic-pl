@@ -108,26 +108,28 @@ ParseResult Parser::bin_op(
   const std::vector<std::string>& ops,
   const std::function<ParseResult()>& func
 ) {
-  ParseResult res;
-  ParseResult left_res = func();
+  ParseResult res; // parseresult object
+  ParseResult left_res = func(); // parseresult extracted from func()
 
-  if(left_res.error) return left_res;
-  NodeVariant left = left_res.node.value();
+  if(left_res.error) return left_res; // check if theres an error and if yes, return early
+  NodeVariant left = left_res.node.value(); // extract node from left_res
 
   for(size_t i=0; i<ops.size(); i++) {
-    while(cur_tok && cur_tok->type == ops.at(i)) {
-      Token op_tok = cur_tok.value();
-      res.register_(advance());
-      ParseResult right_res = func();
+    while(cur_tok && cur_tok->type == ops.at(i)) { // check while cur_tok exists and
+      // the type is in the vector
+      Token op_tok = cur_tok.value(); // get operator token which is just current token
+      res.register_(advance()); // advance
+      ParseResult right_res = func(); // parseresult extracted from func()
 
-      if(right_res.error) return right_res;
+      if(right_res.error) return right_res; // if theres an error return early
 
-      NodeVariant right = right_res.node.value();
+      NodeVariant right = right_res.node.value(); // extract node from right_res
 
-      left = std::make_shared<BinOpNode>(left, op_tok, right);
+      left = std::make_shared<BinOpNode>(left, op_tok, right); // finally, make
+      // a shared binopnode pointer consisting of the 3 elements
     }
-
   }
+  
   return res.success(left);
 }
 
