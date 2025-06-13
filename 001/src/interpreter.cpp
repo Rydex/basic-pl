@@ -77,7 +77,7 @@ Number Interpreter::visit_BinOpNode(const BinOpNode& node) {
 		Number result = left.added_to(right);
 	} else if(node.op_tok.type == MIN_T) {
 		Number result = left.subbed_by(right);
-	}
+	} // test
 }
 
 Number Interpreter::visit_UnaryOpNode(const UnaryOpNode& node) {
