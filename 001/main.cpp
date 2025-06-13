@@ -38,6 +38,7 @@ int main() {
           std::cout << std::get<SharedBin>(ast.value())->as_string() << '\n';
         }
       }
+      std::cout << "null\n";
     }
   } while (input != "exit");
 }

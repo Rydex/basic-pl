@@ -1,6 +1,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "position.h"
+#include "interpreter.h"
 
 Lexer::Lexer(const std::string& fn, const std::string& text): fn(fn), text(text) {
   advance();
@@ -83,6 +84,10 @@ ASTPair run(const std::string& fn, const std::string& text) {
   // generate ast
   Parser parser(tokens);
   ParseResult ast = parser.parse();
+  if(ast.error) return { std::nullopt, ast.error };
 
-  return { ast.node, ast.error }; // return the node/error of the ast
+  Interpreter interpreter;
+  interpreter.visit(ast.node.value());
+
+  return { std::nullopt, std::nullopt };
 }
