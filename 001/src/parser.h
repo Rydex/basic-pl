@@ -105,6 +105,9 @@ public:
   ParseResult& failure(const std::optional<Exception>& error);
 };
 
+Position get_pos_end(const NodeVariant& node);
+Position get_pos_start(const NodeVariant& node);
+
 // end parser
 
 #endif

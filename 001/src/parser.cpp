@@ -23,13 +23,13 @@ UnaryOpNode::UnaryOpNode(
   const Token& op_tok,
   const NodeVariant& node
 ): op_tok(op_tok), node(node) {
-  if(std::holds_alternative<NumberNode>(node)) {
-    pos_end = std::get<NumberNode>(node).pos_end;
-  } else if(std::holds_alternative<SharedBin>(node)) {
-    pos_end = std::get<SharedBin>(node)->pos_end;
-  } else if(std::holds_alternative<SharedUnary>(node)) {
-    pos_end = std::get<SharedUnary>(node)->pos_end;
-  }
+  std::visit([](const auto& val) -> Position {
+    if constexpr(std::is_same_v<std::decay_t<decltype(val)>, NumberNode>) {
+      return val.pos_end;
+    } else {
+      return val->pos_end.value();
+    }
+  }, node);
 }
 
 std::string NumberNode::as_string() const {
@@ -41,26 +41,33 @@ std::string BinOpNode::as_string() const {
              + stringify_node(right_node) + ')';
 }
 
+Position get_pos_end(const NodeVariant& node) {
+  return std::visit([](const auto& val) -> Position {
+    if constexpr (std::is_same_v<std::decay_t<decltype(val)>, NumberNode>) {
+      return val.pos_end;
+    } else {
+      return val->pos_end.value();
+    }
+  }, node);
+}
+
+Position get_pos_start(const NodeVariant& node) {
+  return std::visit([](const auto& val) -> Position {
+    if constexpr (std::is_same_v<std::decay_t<decltype(val)>, NumberNode>) {
+      return val.pos_end;
+    } else {
+      return val->pos_end.value();
+    }
+  }, node);
+}
+
 BinOpNode::BinOpNode(
   const NodeVariant& right_node,
   const Token& op_tok,
   const NodeVariant& left_node
 ): left_node(left_node), op_tok(op_tok), right_node(right_node) {
-  if(std::holds_alternative<NumberNode>(left_node)) {
-    pos_start = std::get<NumberNode>(left_node).pos_start;
-  } else if(std::holds_alternative<SharedBin>(left_node)) {
-    pos_start = std::get<SharedBin>(left_node)->pos_start;
-  } else if(std::holds_alternative<SharedUnary>(left_node)) {
-    pos_start = std::get<SharedUnary>(left_node)->pos_start;
-  }
-
-  if(std::holds_alternative<NumberNode>(right_node)) {
-    pos_end = std::get<NumberNode>(right_node).pos_end;
-  } else if(std::holds_alternative<SharedBin>(right_node)) {
-    pos_end = std::get<SharedBin>(right_node)->pos_end;
-  } else if(std::holds_alternative<SharedUnary>(right_node)) {
-    pos_end = std::get<SharedUnary>(right_node)->pos_end;
-  }
+  pos_start = get_pos_start(left_node);
+  pos_end = get_pos_end(right_node);
 }
 
 // end nodes

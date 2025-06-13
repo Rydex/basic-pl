@@ -52,7 +52,7 @@ Number Interpreter::visit(const NodeVariant& node) {
 		} else if(std::holds_alternative<SharedUnary>(node)) {
 			Number num = visit_UnaryOpNode(*std::get<SharedUnary>(node));
 			return num;
-			
+
 		}
 
 		throw std::runtime_error("no visit method defined");
