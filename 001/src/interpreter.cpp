@@ -1,11 +1,14 @@
 #include "interpreter.h"
 #include "parser.h"
 #include "position.h"
+#include "lexer.h"
 #include <functional>
 #include <iostream>
 #include <stdexcept>
 
-Number::Number(int value): value(value) {}
+Number::Number(int value): value(value) {
+	set_pos();
+}
 
 Number& Number::set_pos(
 	const std::optional<Position>& pos_start,
@@ -37,8 +40,8 @@ std::string Number::as_string() const {
 	return std::to_string(value);
 }
 
-std::function<Number(const NodeVariant& node)> Interpreter::visit(const NodeVariant& node) {
-	std::function<Number(const NodeVariant& node)> method = [this](const NodeVariant& node) {
+Number Interpreter::visit(const NodeVariant& node) {
+	std::function<Number(const NodeVariant& node)> method = [this](const NodeVariant& node) -> Number {
 		if(std::holds_alternative<NumberNode>(node)) {
 			Number num = visit_NumberNode(std::get<NumberNode>(node));
 			return num;
@@ -47,9 +50,9 @@ std::function<Number(const NodeVariant& node)> Interpreter::visit(const NodeVari
 			visit_BinOpNode(*std::get<SharedBin>(node));
 		} else if(std::holds_alternative<SharedUnary>(node)) {
 			visit_UnaryOpNode(*std::get<SharedUnary>(node));
-		} else {
-			throw std::runtime_error("no visit method defined");
 		}
+
+		throw std::runtime_error("no visit method defined");
 	};
 
 	return method(node);
@@ -60,14 +63,21 @@ Number Interpreter::visit_NumberNode(const NumberNode& node) {
 	TokenValue value = node_value.value.value();
 
 	if(std::holds_alternative<int>(value)) {
-		return Number(std::get<int>(value));
+		return Number(std::get<int>(value)).set_pos(node_value.pos_start.value());
 	} else {
-		return Number(std::get<double>(value));
+		return Number(std::get<double>(value)).set_pos(node_value.pos_start.value());
 	}
 }
 
 Number Interpreter::visit_BinOpNode(const BinOpNode& node) {
-	NodeVariant left = visit();
+	Number left = visit(node.left_node);
+	Number right = visit(node.right_node);
+
+	if(node.op_tok.type == PLS_T) {
+		Number result = left.added_to(right);
+	} else if(node.op_tok.type == MIN_T) {
+		
+	}
 }
 
 Number Interpreter::visit_UnaryOpNode(const UnaryOpNode& node) {

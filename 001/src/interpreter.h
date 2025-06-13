@@ -28,7 +28,7 @@ public:
 
 class Interpreter {
 public:
-	void visit(const NodeVariant& node);
+	Number visit(const NodeVariant& node);
 	Number visit_NumberNode(const NumberNode& node);
 	Number visit_BinOpNode(const BinOpNode& node);
 	Number visit_UnaryOpNode(const UnaryOpNode& node);
