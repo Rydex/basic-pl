@@ -1,0 +1,2 @@
+X:\msys64\ucrt64\bin\ar.exe qc libmylib.a CMakeFiles/mylib.dir/src/lexer.cpp.obj CMakeFiles/mylib.dir/src/token.cpp.obj CMakeFiles/mylib.dir/src/exception.cpp.obj CMakeFiles/mylib.dir/src/position.cpp.obj CMakeFiles/mylib.dir/src/parser.cpp.obj CMakeFiles/mylib.dir/src/interpreter.cpp.obj
+X:\msys64\ucrt64\bin\ranlib.exe libmylib.a
