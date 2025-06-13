@@ -19,6 +19,19 @@ std::string UnaryOpNode::as_string() const {
   return '(' + op_tok.as_string() + ", " + stringify_node(node) + ')';
 }
 
+UnaryOpNode::UnaryOpNode(
+  const Token& op_tok,
+  const NodeVariant& node
+): op_tok(op_tok), node(node) {
+  if(std::holds_alternative<NumberNode>(node)) {
+    pos_end = std::get<NumberNode>(node).pos_end;
+  } else if(std::holds_alternative<SharedBin>(node)) {
+    pos_end = std::get<SharedBin>(node)->pos_end;
+  } else if(std::holds_alternative<SharedUnary>(node)) {
+    pos_end = std::get<SharedUnary>(node)->pos_end;
+  }
+}
+
 std::string NumberNode::as_string() const {
   return tok->as_string();
 }
@@ -26,6 +39,28 @@ std::string NumberNode::as_string() const {
 std::string BinOpNode::as_string() const {
   return '(' + stringify_node(left_node) + ", " + op_tok.as_string() + ", "
              + stringify_node(right_node) + ')';
+}
+
+BinOpNode::BinOpNode(
+  const NodeVariant& right_node,
+  const Token& op_tok,
+  const NodeVariant& left_node
+): left_node(left_node), op_tok(op_tok), right_node(right_node) {
+  if(std::holds_alternative<NumberNode>(left_node)) {
+    pos_start = std::get<NumberNode>(left_node).pos_start;
+  } else if(std::holds_alternative<SharedBin>(left_node)) {
+    pos_start = std::get<SharedBin>(left_node)->pos_start;
+  } else if(std::holds_alternative<SharedUnary>(left_node)) {
+    pos_start = std::get<SharedUnary>(left_node)->pos_start;
+  }
+
+  if(std::holds_alternative<NumberNode>(right_node)) {
+    pos_end = std::get<NumberNode>(right_node).pos_end;
+  } else if(std::holds_alternative<SharedBin>(right_node)) {
+    pos_end = std::get<SharedBin>(right_node)->pos_end;
+  } else if(std::holds_alternative<SharedUnary>(right_node)) {
+    pos_end = std::get<SharedUnary>(right_node)->pos_end;
+  }
 }
 
 // end nodes

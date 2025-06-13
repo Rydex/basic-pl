@@ -5,6 +5,7 @@
 #include <vector>
 #include <utility>
 #include "exception.h"
+#include "interpreter.h"
 #include "token.h"
 #include "position.h"
 #include "parser.h"
@@ -34,8 +35,8 @@ public:
   Token make_number();
 };
 
-using ASTPair = std::pair<std::optional<NodeVariant>, std::optional<Exception>>;
+using RunType = std::pair<std::optional<Number>, std::optional<Exception>>;
 
-ASTPair run(const std::string& fn, const std::string& text);
+RunType run(const std::string& fn, const std::string& text);
 
 #endif

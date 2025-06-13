@@ -7,11 +7,11 @@
 
 class Number {
 protected:
-	int value;
+	std::optional<int> value;
 	std::optional<Position> pos_start, pos_end;
 
 public:
-	Number(int value);
+	Number(std::optional<int> value);
 
 	Number& set_pos(
 		const std::optional<Position>& pos_start = std::nullopt,
