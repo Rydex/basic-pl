@@ -79,7 +79,7 @@ Number Interpreter::visit_BinOpNode(const BinOpNode& node) {
 		Number result = left.subbed_by(right);
 	} else if(node.op_tok.type == MUL_T) {
 		Number result = left.multiplied_by(right);
-	}
+	} // test
 }
 
 Number Interpreter::visit_UnaryOpNode(const UnaryOpNode& node) {
