@@ -54,9 +54,9 @@ Position get_pos_end(const NodeVariant& node) {
 Position get_pos_start(const NodeVariant& node) {
   return std::visit([](const auto& val) -> Position {
     if constexpr (std::is_same_v<std::decay_t<decltype(val)>, NumberNode>) {
-      return val.pos_end;
+      return val.pos_start;
     } else {
-      return val->pos_end.value();
+      return val->pos_start.value();
     }
   }, node);
 }
