@@ -16,7 +16,10 @@ RTVariant RTResult::register_(const RTResult& res) {
 	// 	if(val.error) this->error = val.error;
 	// }, res);
 
-	if(res.error) this->error = res.error;
+	if(res.error) {
+		this->error = res.error;
+	}
+
 	return res.value.value();
 }
 
@@ -68,109 +71,109 @@ NumberPair Number::divided_by(const Number& other) const {
 	return { Number(this->value / other.value), std::nullopt };
 }
 
-	std::string Number::as_string() const {
-		std::ostringstream oss;
-		oss << value;
-		return oss.str();
-	}
+std::string Number::as_string() const {
+	std::ostringstream oss;
+	oss << value;
+	return oss.str();
+}
 
-	RTResult Interpreter::visit(const NodeVariant& node) {
-		return std::visit([this](const auto& val) -> RTResult {
-			using T = std::decay_t<decltype(val)>;
+RTResult Interpreter::visit(const NodeVariant& node) {
+	return std::visit([this](const auto& val) -> RTResult {
+		using T = std::decay_t<decltype(val)>;
 
-			if constexpr (std::is_same_v<T, NumberNode>) {
-				return visit_NumberNode(val);
-			} else if constexpr (std::is_same_v<T, SharedBin>) {
-				return visit_BinOpNode(*val);
-			} else if constexpr (std::is_same_v<T, SharedUnary>) {
-				return visit_UnaryOpNode(*val);
-			}
-
-			throw std::runtime_error("no visit method defined");
-		}, node);
-
-	}
-
-	RTResult Interpreter::visit_NumberNode(const NumberNode& node) {
-		Token node_value = node.tok.value();
-		TokenValue value = node_value.value.value();
-
-		if(std::holds_alternative<int>(value)) {
-			return RTResult().success( 
-				Number(std::get<int>(value)).set_pos(node_value.pos_start.value())
-			);
-		} else {
-			return RTResult().success(
-				Number(std::get<double>(value)).set_pos(node_value.pos_start.value())
-			);
+		if constexpr (std::is_same_v<T, NumberNode>) {
+			return visit_NumberNode(val);
+		} else if constexpr (std::is_same_v<T, SharedBin>) {
+			return visit_BinOpNode(*val);
+		} else if constexpr (std::is_same_v<T, SharedUnary>) {
+			return visit_UnaryOpNode(*val);
 		}
+
+		throw std::runtime_error("no visit method defined");
+	}, node);
+
+}
+
+RTResult Interpreter::visit_NumberNode(const NumberNode& node) {
+	Token node_value = node.tok.value();
+	TokenValue value = node_value.value.value();
+
+	if(std::holds_alternative<int>(value)) {
+		return RTResult().success( 
+			Number(std::get<int>(value)).set_pos(node_value.pos_start.value())
+		);
+	} else {
+		return RTResult().success(
+			Number(std::get<double>(value)).set_pos(node_value.pos_start.value())
+		);
 	}
+}
 
-	RTResult Interpreter::visit_BinOpNode(const BinOpNode& node) {
-		RTResult res;
-		// RTResult left_res = res.register_(visit(node.left_node));
-		RTResult left_res = visit(node.left_node);
-		RTVariant left_val = res.register_(left_res);
+RTResult Interpreter::visit_BinOpNode(const BinOpNode& node) {
+	RTResult res;
+	// RTResult left_res = res.register_(visit(node.left_node));
+	RTVariant left_val = res.register_(visit(node.left_node));
 
-		if(left_res.error) return left_res;
+	if(res.error) return res;
 
-		Number left = left_res.value.value();
+	// Number left = left_res.value.value();
+	Number left = std::get<Number>(left_val);
 		
-		RTResult right_res = visit(node.right_node);
-		if(right_res.error) return right_res;
+	RTVariant right_val = res.register_(visit(node.right_node));
+	if(res.error) return res;
 
-		Number right = right_res.value.value();
+	Number right = std::get<Number>(right_val);
 
-		std::optional<Number> result;
+	std::optional<Number> result;
 
-		std::optional<Exception> error;
+	std::optional<Exception> error;
 
-		if(node.op_tok.type == PLS_T) {
-			const auto&[res, err] = left.added_to(right);
-			result = res;
-			error = err;
+	if(node.op_tok.type == PLS_T) {
+		const auto&[res, err] = left.added_to(right);
+		result = res;
+		error = err;
 
-		} else if(node.op_tok.type == MIN_T) {
-			const auto&[res, err] = left.subbed_by(right);
-			result = res;
-			error = err;
+	} else if(node.op_tok.type == MIN_T) {
+		const auto&[res, err] = left.subbed_by(right);
+		result = res;
+		error = err;
 
-		} else if(node.op_tok.type == MUL_T) {
-			const auto&[res, err] = left.multiplied_by(right);
-			result = res;
-			error = err;
+	} else if(node.op_tok.type == MUL_T) {
+		const auto&[res, err] = left.multiplied_by(right);
+		result = res;
+		error = err;
 
-		} else if(node.op_tok.type == DIV_T) {
-			const auto&[res, err] = left.divided_by(right);
-			result = res;
-			error = err;
+	} else if(node.op_tok.type == DIV_T) {
+		const auto&[res, err] = left.divided_by(right);
+		result = res;
+		error = err;
 
-		}
-
-		if(error) return res.failure(error.value());
-
-		return res.success(
-			result->set_pos(node.pos_start, node.pos_end)
-		);
 	}
 
-	RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node) {
-		RTResult res;
-		RTResult number_res = visit(node.node);
+	if(error) return res.failure(error.value());
 
-		if(number_res.error) return number_res;
+	return res.success(
+		result->set_pos(node.pos_start, node.pos_end)
+	);
+}
 
-		Number number = number_res.value.value();
-		std::optional<Exception> error = std::nullopt;
+RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node) {
+	RTResult res;
+	RTResult number_res = visit(node.node);
 
-		if(node.op_tok.type == MIN_T) {
-			const auto&[result, err] = number.multiplied_by(Number(-1));
-			error = err;
-		}
+	if(number_res.error) return number_res;
 
-		if(error) return res.failure(error.value());
+	Number number = number_res.value.value();
+	std::optional<Exception> error = std::nullopt;
 
-		return res.success(
-			number.set_pos(node.pos_start, node.pos_end)
-		);
+	if(node.op_tok.type == MIN_T) {
+		const auto&[result, err] = number.multiplied_by(Number(-1));
+		error = err;
 	}
+
+	if(error) return res.failure(error.value());
+
+	return res.success(
+		number.set_pos(node.pos_start, node.pos_end)
+	);
+}
