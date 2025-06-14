@@ -1,72 +1,72 @@
-	#include "interpreter.h"
+#include "interpreter.h"
 #include <cassert>
-	#include "parser.h"
-	#include "position.h"
-	#include "lexer.h"
-	#include <sstream>
-	#include <stdexcept>
+#include "parser.h"
+#include "position.h"
+#include "lexer.h"
+#include <sstream>
+#include <stdexcept>
 
-	// run time result
+// run time result
 
-	RTVariant RTResult::register_(const RTResult& res) {
-		// if(res.error) this->error = res.error.value();
-		// return res.value.value();
+RTVariant RTResult::register_(const RTResult& res) {
+	// if(res.error) this->error = res.error.value();
+	// return res.value.value();
 
-		// std::visit([this](const auto& val) {
-		// 	if(val.error) this->error = val.error;
-		// }, res);
+	// std::visit([this](const auto& val) {
+	// 	if(val.error) this->error = val.error;
+	// }, res);
 
-		if(res.error) this->error = res.error;
-		return res.value.value();
-	}
+	if(res.error) this->error = res.error;
+	return res.value.value();
+}
 
-	RTResult& RTResult::success(const Number& value) {
-		this->value = value;
-		return *this;
-	}
+RTResult& RTResult::success(const Number& value) {
+	this->value = value;
+	return *this;
+}
 
-	RTResult& RTResult::failure(const Exception& error) {
-		this->error = error;
-		return *this;
-	}
+RTResult& RTResult::failure(const Exception& error) {
+	this->error = error;
+	return *this;
+}
 
-	// end rt result
+// end rt result
 
-	Number::Number(double value): value(value) {
-		set_pos();
-	}
+Number::Number(double value): value(value) {
+	set_pos();
+}
 
-	Number& Number::set_pos(
-		const std::optional<Position>& pos_start,
-		const std::optional<Position>& pos_end
-	) {
-		this->pos_start = pos_start;
-		this->pos_end = pos_end;
+Number& Number::set_pos(
+	const std::optional<Position>& pos_start,
+	const std::optional<Position>& pos_end
+) {
+	this->pos_start = pos_start;
+	this->pos_end = pos_end;
 
-		return *this;
-	}
+	return *this;
+}
 
-	NumberPair Number::added_to(const Number& other) const {
-		return { Number(this->value + other.value), std::nullopt };
-	}
+NumberPair Number::added_to(const Number& other) const {
+	return { Number(this->value + other.value), std::nullopt };
+}
 
-	NumberPair Number::subbed_by(const Number& other) const {
-		return { Number(this->value - other.value), std::nullopt };
-	}
+NumberPair Number::subbed_by(const Number& other) const {
+	return { Number(this->value - other.value), std::nullopt };
+}
 
-	NumberPair Number::multiplied_by(const Number& other) const {
-		return { Number(this->value * other.value), std::nullopt };
-	}
+NumberPair Number::multiplied_by(const Number& other) const {
+	return { Number(this->value * other.value), std::nullopt };
+}
 
-	NumberPair Number::divided_by(const Number& other) const {
-		if(other.value == 0)
-			return { std::nullopt, RTException(
-				other.pos_start.value(), other.pos_end.value(),
-				"division by zero"
-			) };
+NumberPair Number::divided_by(const Number& other) const {
+	if(other.value == 0)
+		return { std::nullopt, RTException(
+			other.pos_start.value(), other.pos_end.value(),
+			"division by zero"
+		) };
 
-		return { Number(this->value / other.value), std::nullopt };
-	}
+	return { Number(this->value / other.value), std::nullopt };
+}
 
 	std::string Number::as_string() const {
 		std::ostringstream oss;
