@@ -5,6 +5,25 @@
 #include <sstream>
 #include <stdexcept>
 
+// run time result
+
+Number RTResult::register_(const RTResult& res) {
+	if(res.error) this->error = res.error.value();
+	return res.value.value();
+}
+
+RTResult& RTResult::success(const Number& value) {
+	this->value = value;
+	return *this;
+}
+
+RTResult& RTResult::failure(const Exception& error) {
+	this->error = error;
+	return *this;
+}
+
+// end rt result
+
 Number::Number(std::optional<double> value): value(value) {
 	set_pos();
 }

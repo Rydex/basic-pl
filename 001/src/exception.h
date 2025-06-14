@@ -37,6 +37,15 @@ public:
   );
 };
 
+class RTException : public Exception {
+public:
+  RTException(
+    const Position& pos_start,
+    const Position& pos_end,
+    const std::string& details = ""
+  );
+};
+
 std::string string_with_arrows(
   const std::string& text,
   const Position& pos_start,
