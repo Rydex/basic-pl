@@ -75,18 +75,21 @@ BinOpNode::BinOpNode(
 // parse result
 
 RegisterVariant ParseResult::register_(const RegisterVariant& res) {
-  if(std::holds_alternative<ParseResult>(res)) { // check if res is another parseresult
-    const ParseResult& other = std::get<ParseResult>(res);
+  std::visit([this](const auto& val) -> RegisterVariant {
+    using T = std::decay_t<decltype(val)>;
 
-    if(other.error) this->error = other.error;
-    if(std::holds_alternative<NumberNode>(other.node.value())) {
-      return std::get<NumberNode>(other.node.value());
-    } else if (std::holds_alternative<SharedBin>(other.node.value())) {
-      return std::get<SharedBin>(other.node.value());
-    } else {
-      return std::get<SharedUnary>(other.node.value());
+
+
+    if constexpr (std::is_same_v<T, ParseResult>) {
+      if(val.error) this->error = val.error;
+
+      return std::visit([](const auto& inner_node) -> RegisterVariant {
+        return inner_node;
+      }, val.node.value());
     }
-  }
+    
+    return val;
+  }, res);
 
   return res;
 }
