@@ -1,6 +1,7 @@
 #ifndef EXCEPTION
 #define EXCEPTION
 
+#include <optional>
 #include <string>
 #include "position.h"
 
@@ -8,6 +9,7 @@ class Exception {
 private:
   Position pos_start, pos_end;
   std::string message, details;
+  
 public:
   Exception(
     const Position& pos_start,
