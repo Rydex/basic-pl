@@ -2,10 +2,10 @@
 #include "parser.h"
 #include "position.h"
 #include "lexer.h"
-#include <functional>
+#include <sstream>
 #include <stdexcept>
 
-Number::Number(std::optional<int> value): value(value) {
+Number::Number(std::optional<double> value): value(value) {
 	set_pos();
 }
 
@@ -36,29 +36,25 @@ Number Number::divided_by(const Number& other) const {
 }
 
 std::string Number::as_string() const {
-	return std::to_string(value.value());
+	std::ostringstream oss;
+	oss << value.value();
+	return oss.str();
 }
 
 Number Interpreter::visit(const NodeVariant& node) {
-	std::function<Number(const NodeVariant& node)> method = [this](const NodeVariant& node) -> Number {
-		if(std::holds_alternative<NumberNode>(node)) {
-			Number num = visit_NumberNode(std::get<NumberNode>(node));
-			return num;
+	return std::visit([this](const auto& val) -> Number {
+		using T = std::decay_t<decltype(val)>;
 
-		} else if(std::holds_alternative<SharedBin>(node)) {
-			Number num = visit_BinOpNode(*std::get<SharedBin>(node));
-			return num;
-
-		} else if(std::holds_alternative<SharedUnary>(node)) {
-			Number num = visit_UnaryOpNode(*std::get<SharedUnary>(node));
-			return num;
-
+		if constexpr (std::is_same_v<T, NumberNode>) {
+			return visit_NumberNode(val);
+		} else if constexpr (std::is_same_v<T, SharedBin>) {
+			return visit_BinOpNode(*val);
+		} else if constexpr (std::is_same_v<T, SharedUnary>) {
+			return visit_UnaryOpNode(*val);
 		}
 
 		throw std::runtime_error("no visit method defined");
-	};
-
-	return method(node);
+	}, node);
 }
 
 Number Interpreter::visit_NumberNode(const NumberNode& node) {

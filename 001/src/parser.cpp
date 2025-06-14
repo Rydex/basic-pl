@@ -6,13 +6,13 @@
 // nodes
 
 std::string stringify_node(const NodeVariant& node) {
-  if(std::holds_alternative<NumberNode>(node)) {
-    return std::get<NumberNode>(node).as_string();
-  } else if(std::holds_alternative<SharedUnary>(node)) {
-    return std::get<SharedUnary>(node)->as_string();
-  } else {
-    return std::get<SharedBin>(node)->as_string();
-  }
+  return std::visit([](const auto& val) -> std::string {
+    if constexpr (std::is_same_v<std::decay_t<decltype(val)>, NumberNode>) {
+      return val.as_string();
+    } else {
+      return val->as_string();
+    }
+  }, node);
 }
 
 std::string UnaryOpNode::as_string() const {
@@ -77,8 +77,6 @@ BinOpNode::BinOpNode(
 RegisterVariant ParseResult::register_(const RegisterVariant& res) {
   std::visit([this](const auto& val) -> RegisterVariant {
     using T = std::decay_t<decltype(val)>;
-
-
 
     if constexpr (std::is_same_v<T, ParseResult>) {
       if(val.error) this->error = val.error;
