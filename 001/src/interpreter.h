@@ -5,6 +5,13 @@
 #include "position.h"
 #include <functional>
 
+class Number;
+
+using NumberPair = std::pair<
+	std::optional<Number>,
+	std::optional<Exception>
+>;
+
 class Number {
 protected:
 	double value;
@@ -18,30 +25,31 @@ public:
 		const std::optional<Position>& pos_end = std::nullopt
 	);
 
-	Number added_to(const Number& other) const;
-	Number subbed_by(const Number& other) const;
-	Number multiplied_by(const Number& other) const;
-	Number divided_by (const Number& other) const;
+	NumberPair added_to(const Number& other) const;
+	NumberPair subbed_by(const Number& other) const;
+	NumberPair multiplied_by(const Number& other) const;
+	NumberPair divided_by (const Number& other) const;
 
 	std::string as_string() const;
 };
 
-class Interpreter {
-public:
-	Number visit(const NodeVariant& node);
-	Number visit_NumberNode(const NumberNode& node);
-	Number visit_BinOpNode(const BinOpNode& node);
-	Number visit_UnaryOpNode(const UnaryOpNode& node);
-};
-
 class RTResult {
 public:
-	std::optional<NodeVariant> value = std::nullopt;
+	std::optional<Number> value = std::nullopt;
 	std::optional<Exception> error = std::nullopt;
 
-	NodeVariant register_(const RTResult& res);
-	RTResult& success(const NodeVariant& value);
+	Number register_(const RTResult& res);
+	RTResult& success(const Number& value);
 	RTResult& failure(const Exception& error);
 };
+
+class Interpreter {
+public:
+	RTResult visit(const NodeVariant& node);
+	RTResult visit_NumberNode(const NumberNode& node);
+	RTResult visit_BinOpNode(const BinOpNode& node);
+	RTResult visit_UnaryOpNode(const UnaryOpNode& node);
+};
+
 
 #endif

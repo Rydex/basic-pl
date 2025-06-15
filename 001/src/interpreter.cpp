@@ -5,18 +5,20 @@
 #include <sstream>
 #include <stdexcept>
 
-NodeVariant RTResult::register_(const RTResult& res) {
+Number RTResult::register_(const RTResult& res) {
 	if(res.error) this->error = res.error;
 	return res.value.value();
 }
 
-RTResult& RTResult::success(const NodeVariant& value) {
+RTResult& RTResult::success(const Number& value) {
 	this->value = value;
+	this->error = std::nullopt;
 	return *this;
 }
 
 RTResult& RTResult::failure(const Exception& error) {
 	this->error = error;
+	this->value = std::nullopt;
 	return *this;
 }
 
@@ -34,24 +36,27 @@ Number& Number::set_pos(
 	return *this;
 }
 
-Number Number::added_to(const Number& other) const {
-	return Number(this->value + other.value);
+NumberPair Number::added_to(const Number& other) const {
+	return { Number(this->value + other.value), std::nullopt };
 }
 
-Number Number::subbed_by(const Number& other) const {
-	return Number(this->value - other.value);
+NumberPair Number::subbed_by(const Number& other) const {
+	return { Number(this->value - other.value), std::nullopt };
 }
 
-Number Number::multiplied_by(const Number& other) const {
-	return Number(this->value * other.value);
+NumberPair Number::multiplied_by(const Number& other) const {
+	return { Number(this->value * other.value), std::nullopt };
 }
 
-Number Number::divided_by(const Number& other) const {
+NumberPair Number::divided_by(const Number& other) const {
 	if(other.value == 0) {
-		throw std::runtime_error("division by zero");
+		return { std::nullopt, RTException(
+			other.pos_start.value(), other.pos_end.value(),
+			"division by zero"
+		) };
 	}
 
-	return Number(this->value / other.value);
+	return { Number(this->value / other.value), std::nullopt };
 }
 
 std::string Number::as_string() const {
@@ -60,8 +65,8 @@ std::string Number::as_string() const {
 	return oss.str();
 }
 
-Number Interpreter::visit(const NodeVariant& node) {
-	return std::visit([this](const auto& val) -> Number {
+RTResult Interpreter::visit(const NodeVariant& node) {
+	return std::visit([this](const auto& val) -> RTResult {
 		using T = std::decay_t<decltype(val)>;
 
 		if constexpr (std::is_same_v<T, NumberNode>) {
@@ -76,42 +81,73 @@ Number Interpreter::visit(const NodeVariant& node) {
 	}, node);
 }
 
-Number Interpreter::visit_NumberNode(const NumberNode& node) {
+RTResult Interpreter::visit_NumberNode(const NumberNode& node) {
 	Token node_value = node.tok.value();
 	TokenValue value = node_value.value.value();
 
 	if(std::holds_alternative<int>(value)) {
-		return Number(std::get<int>(value)).set_pos(node_value.pos_start.value());
+		return RTResult().success(
+			Number(std::get<int>(value)).set_pos(node_value.pos_start.value())
+		);
 	} else {
-		return Number(std::get<double>(value)).set_pos(node_value.pos_start.value());
+		return RTResult().success(
+			Number(std::get<double>(value)).set_pos(node_value.pos_start.value())
+		);
 	}
 }
 
-Number Interpreter::visit_BinOpNode(const BinOpNode& node) {
-	Number left = visit(node.left_node);
-	Number right = visit(node.right_node);
+RTResult Interpreter::visit_BinOpNode(const BinOpNode& node) {
+	RTResult res;
+	Number left = res.register_(visit(node.left_node));
+	if(res.error) return res;
+
+	Number right = res.register_(visit(node.right_node));
+	if(res.error) return res;
 
 	std::optional<Number> result;
+	std::optional<Exception> error;
 
 	if(node.op_tok.type == PLS_T) {
-		result = left.added_to(right);
+		const auto&[res, err] = left.added_to(right);
+		result = res;
+		error = err;
+
 	} else if(node.op_tok.type == MIN_T) {
-		result = left.subbed_by(right);
+		const auto&[res, err] = left.subbed_by(right);
+		result = res;
+		error = err;
+
 	} else if(node.op_tok.type == MUL_T) {
-		result = left.multiplied_by(right);
+		const auto&[res, err] = left.multiplied_by(right);
+		result = res;
+		error = err;
+
 	} else if(node.op_tok.type == DIV_T) {
-		result = left.divided_by(right);
+		const auto&[res, err] = left.divided_by(right);
+		result = res;
+		error = err;
 	}
 
-	return result->set_pos(node.pos_start, node.pos_end);
+	Number result_pos = *result;
+	result_pos.set_pos(node.pos_start.value(), node.pos_end.value());
+
+	if(error) return res.failure(error.value());
+
+	else
+		return res.success(result_pos);
 }
 
-Number Interpreter::visit_UnaryOpNode(const UnaryOpNode& node) {
-	Number number = visit(node.node);
+RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node) {
+	RTResult res;
+	Number number = res.register_(visit(node.node));
+	if(res.error) return res;
+
+	std::optional<Exception> err;
 
 	if(node.op_tok.type == MIN_T) {
-		number = number.multiplied_by(Number(-1));
+		const auto&[result, error] = number.multiplied_by(Number(-1));
 	}
 
-	return number.set_pos(node.pos_start, node.pos_end);
+	else
+		return res.success(number.set_pos(node.pos_start, node.pos_end));
 }
