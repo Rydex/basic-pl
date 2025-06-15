@@ -62,9 +62,9 @@ Position get_pos_start(const NodeVariant& node) {
 }
 
 BinOpNode::BinOpNode(
-  const NodeVariant& right_node,
+  const NodeVariant& left_node,
   const Token& op_tok,
-  const NodeVariant& left_node
+  const NodeVariant& right_node
 ): left_node(left_node), op_tok(op_tok), right_node(right_node) {
   pos_start = get_pos_start(left_node);
   pos_end = get_pos_end(right_node);

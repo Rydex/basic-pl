@@ -32,6 +32,10 @@ Number Number::multiplied_by(const Number& other) const {
 }
 
 Number Number::divided_by(const Number& other) const {
+	if(other.value == 0) {
+		throw std::runtime_error("division by zero");
+	}
+
 	return Number(this->value / other.value);
 }
 
