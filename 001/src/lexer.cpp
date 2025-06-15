@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "context.h"
 #include "parser.h"
 #include "position.h"
 #include "interpreter.h"
@@ -87,8 +88,10 @@ RunType run(const std::string& fn, const std::string& text) {
   ParseResult ast = parser.parse();
   if(ast.error) return { std::nullopt, ast.error };
 
+  Context context("<stdin>");
+
   Interpreter interpreter;
-  RTResult result = interpreter.visit(ast.node.value());
+  RTResult result = interpreter.visit(ast.node.value(), context);
 
   if(result.error) {
     return { std::nullopt, result.error.value() };
