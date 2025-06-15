@@ -73,7 +73,7 @@ Number Interpreter::visit_BinOpNode(const BinOpNode& node) {
 	Number right = visit(node.right_node);
 
 	std::optional<Number> result;
-	
+
 	if(node.op_tok.type == PLS_T) {
 		result = left.added_to(right);
 	} else if(node.op_tok.type == MIN_T) {
@@ -84,7 +84,7 @@ Number Interpreter::visit_BinOpNode(const BinOpNode& node) {
 		result = left.divided_by(right);
 	}
 
-	return result.set_pos(node.pos_start, node.pos_end);
+	return result->set_pos(node.pos_start, node.pos_end);
 }
 
 Number Interpreter::visit_UnaryOpNode(const UnaryOpNode& node) {
