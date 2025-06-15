@@ -31,6 +31,9 @@ token_pair Lexer::make_tokens() {
       } else if (cur_char == '/') {
         tokens.emplace_back(DIV_T, std::nullopt, pos);
         advance();
+      } else if (cur_char == '^') {
+        tokens.emplace_back(POW_T, std::nullopt, pos);
+        advance();
       } else if (cur_char == '(') {
         tokens.emplace_back(LPR_T, std::nullopt, pos);
         advance();

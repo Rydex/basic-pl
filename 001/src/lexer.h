@@ -18,7 +18,8 @@ const std::string PLS_T = "PLUS",
                   RPR_T = "RPAREN",
                   INT_T = "INT",
                   FLT_T = "FLOAT",
-                  EOF_T = "EOF";
+                  EOF_T = "EOF",
+                  POW_T = "POW";
 
 using token_pair = std::pair<std::vector<Token>, std::shared_ptr<Exception>>;
 

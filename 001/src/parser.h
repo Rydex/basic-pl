@@ -81,12 +81,15 @@ public:
 
   Token advance();
   ParseResult parse();
+  ParseResult atom();
   ParseResult factor();
   ParseResult term();
   ParseResult expr();
+  ParseResult power();
   ParseResult bin_op(
+    const std::function<ParseResult()>& func_a,
     const std::vector<std::string>& ops,
-    const std::function<ParseResult()>& func
+    const std::optional<std::function<ParseResult()>>& func_b = std::nullopt
   );
 };
 

@@ -31,7 +31,8 @@ public:
   NumberPair added_to(const Number& other) const;
   NumberPair subbed_by(const Number& other) const;
   NumberPair multiplied_by(const Number& other) const;
-  NumberPair divided_by (const Number& other) const;
+  NumberPair divided_by(const Number& other) const;
+  NumberPair powed_by(const Number& other) const;
 
   std::string as_string() const;
 };

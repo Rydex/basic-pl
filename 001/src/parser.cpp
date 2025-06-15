@@ -129,28 +129,25 @@ ParseResult Parser::parse() {
   if(!res.error && cur_tok->type != EOF_T) {
     return res.failure(InvalidSyntaxException(
       cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-      "expected '+', '-', '*' or '/'"
+      "expected '+', '-', '*, '/' or '^'"
     ));
   }
 
   return res;
 }
 
-ParseResult Parser::factor() {
+ParseResult Parser::power() {
+  return bin_op([this]() { return atom(); }, { POW_T }, [this]() { return factor(); });
+}
+
+ParseResult Parser::atom() {
   ParseResult res;
   Token tok = cur_tok.value();
 
-  if(tok.type == PLS_T || tok.type == MIN_T) {
-    res.register_(advance());
-    ParseResult factor_res = factor();
-
-    if(factor_res.error) return factor_res;
-
-    return res.success(std::make_shared<UnaryOpNode>(tok, factor_res.node.value()));
-
-  } else if(tok.type == INT_T || tok.type == FLT_T) {
+  if(tok.type == INT_T || tok.type == FLT_T) {
     res.register_(advance());
     return res.success(NumberNode(tok));
+
   } else if(tok.type == LPR_T) {
     res.register_(advance());
     ParseResult expr_res = expr();
@@ -170,24 +167,43 @@ ParseResult Parser::factor() {
 
   return res.failure(InvalidSyntaxException(
     tok.pos_start.value(), tok.pos_end.value(),
-    "expected int or float"
+    "expected int, float, '+', '-' or '('"
   ));
 }
 
+ParseResult Parser::factor() {
+  ParseResult res;
+  Token tok = cur_tok.value();
+
+  if(tok.type == PLS_T || tok.type == MIN_T) {
+    res.register_(advance());
+    ParseResult factor_res = factor();
+
+    if(factor_res.error) return factor_res;
+
+    return res.success(std::make_shared<UnaryOpNode>(tok, factor_res.node.value()));
+  }
+
+  return power();
+}
+
 ParseResult Parser::term() {
-  return bin_op({ MUL_T, DIV_T }, [this]() { return factor(); });
+  return bin_op([this]() { return factor(); }, { MUL_T, DIV_T });
 }
 
 ParseResult Parser::expr() {
-  return bin_op({ PLS_T, MIN_T }, [this]() { return term(); });
+  return bin_op([this]() { return term(); }, { PLS_T, MIN_T });
 }
 
 ParseResult Parser::bin_op(
+  const std::function<ParseResult()>& func_a,
   const std::vector<std::string>& ops,
-  const std::function<ParseResult()>& func
+  const std::optional<std::function<ParseResult()>>& func_b
 ) {
+  std::function<ParseResult()> other_func = func_b.value_or(func_a);
+
   ParseResult res; // parseresult object
-  ParseResult left_res = func(); // parseresult extracted from func()
+  ParseResult left_res = func_a(); // parseresult extracted from func_a()
 
   if(left_res.error) return left_res; // check if theres an error and if yes, return early
   NodeVariant left = left_res.node.value(); // extract node from left_res
@@ -196,7 +212,7 @@ ParseResult Parser::bin_op(
       // the type is in the vector
       Token op_tok = cur_tok.value(); // get operator token which is just current token
       res.register_(advance()); // advance
-      ParseResult right_res = func(); // parseresult extracted from func()
+      ParseResult right_res = other_func(); // parseresult extracted from func()
 
       if(right_res.error) return right_res; // if theres an error return early
 

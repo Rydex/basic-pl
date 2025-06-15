@@ -4,6 +4,7 @@
 #include "lexer.h"
 #include <sstream>
 #include <stdexcept>
+#include <cmath>
 
 Number RTResult::register_(const RTResult& res) {
   if(res.error) this->error = res.error;
@@ -64,6 +65,10 @@ NumberPair Number::divided_by(const Number& other) const {
   }
 
   return { Number(this->value / other.value).set_context(this->context), nullptr };
+}
+
+NumberPair Number::powed_by(const Number& other) const {
+  return { Number(std::pow(this->value, other.value)).set_context(this->context), nullptr };
 }
 
 std::string Number::as_string() const {
@@ -139,6 +144,12 @@ RTResult Interpreter::visit_BinOpNode(const BinOpNode& node, const Context& cont
     const auto&[res, err] = left.divided_by(right);
     result = res;
     error = err;
+
+  } else if(node.op_tok.type == POW_T) {
+    const auto&[res, err] = left.powed_by(right);
+    result = res;
+    error = err;
+
   }
 
 
