@@ -1,4 +1,5 @@
 #include "exception.h"
+#include <stdexcept>
 
 Exception::Exception(
   const Position& pos_start,
@@ -34,11 +35,41 @@ InvalidSyntaxException::InvalidSyntaxException(
   : Exception(pos_start, pos_end, "Invalid Syntax", details) {}
 
 RTException::RTException(
+  const std::optional<Context>& context,
   const Position& pos_start,
   const Position& pos_end,
   const std::string& details
-)
-  : Exception(pos_start, pos_end, "Runtime Error", details) {}
+): 
+  Exception(pos_start, pos_end, "Runtime Error", details),
+  context(context) {}
+
+std::string RTException::as_string() const {
+  std::string result = generate_traceback();
+  result += "\n\n" + string_with_arrows(
+    pos_start.get_ftxt(),
+    pos_start,
+    pos_end
+  );
+
+  return result;
+}
+
+std::string RTException::generate_traceback() const {
+  std::string result = "";
+
+  Position pos = pos_start;
+  std::optional<Context> ctx = this->context;
+
+  while(ctx) {
+    result += "  File" + pos.get_fn() + ", line " + std::to_string(pos.get_ln() + 1)
+           +  ", in " + ctx->display_name + "\n" + result;
+
+    pos = ctx->parent_entry_pos.value();
+    ctx = *ctx->parent.value();
+  }
+
+  return "traceback (most recent call last):\n" + result;
+}
 
 std::string string_with_arrows(
   const std::string& text,

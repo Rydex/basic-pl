@@ -57,9 +57,9 @@ NumberPair Number::multiplied_by(const Number& other) const {
 NumberPair Number::divided_by(const Number& other) const {
   if(other.value == 0) {
     return { std::nullopt, RTException(
+      other.context,
       other.pos_start.value(), other.pos_end.value(),
-      "division by zero",
-      this->context
+      "division by zero"
       ) };
   }
 

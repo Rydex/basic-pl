@@ -3,10 +3,11 @@
 
 #include <optional>
 #include <string>
+#include "context.h"
 #include "position.h"
 
 class Exception {
-private:
+protected:
   Position pos_start, pos_end;
   std::string message, details;
   
@@ -18,7 +19,7 @@ public:
     const std::string& details
   );
 
-  std::string as_string() const;
+  virtual std::string as_string() const;
 };
 
 class IllegalCharException : public Exception {
@@ -40,12 +41,19 @@ public:
 };
 
 class RTException : public Exception {
+protected:
+  std::optional<Context> context;
+
 public:
   RTException(
+    const std::optional<Context>& context,
     const Position& pos_start,
     const Position& pos_end,
     const std::string& details = ""
   );
+
+  std::string as_string() const override;
+  std::string generate_traceback() const;
 };
 
 std::string string_with_arrows(
