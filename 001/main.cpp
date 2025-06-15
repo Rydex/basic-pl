@@ -1,5 +1,4 @@
 #include <iostream>
-#include <variant>
 #include "src/lexer.h"
 
 int main() {
