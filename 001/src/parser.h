@@ -16,6 +16,8 @@ struct NumberNode {
   Position pos_start = tok->pos_start.value();
   Position pos_end = tok->pos_end.value();
 
+  NumberNode(const Token& token);
+
   std::string as_string() const;
 };
 

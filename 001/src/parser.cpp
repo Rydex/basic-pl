@@ -1,6 +1,7 @@
 #include "parser.h"
 #include "exception.h"
 #include "lexer.h"
+#include <algorithm>
 #include <variant>
 
 // nodes
@@ -31,6 +32,9 @@ UnaryOpNode::UnaryOpNode(
     }
   }, node);
 }
+
+NumberNode::NumberNode(const Token& token)
+  : tok(token), pos_start(token.pos_start.value()), pos_end(token.pos_end.value()) {}
 
 std::string NumberNode::as_string() const {
   return tok->as_string();
@@ -146,7 +150,7 @@ ParseResult Parser::factor() {
 
   } else if(tok.type == INT_T || tok.type == FLT_T) {
     res.register_(advance());
-    return res.success(NumberNode{tok});
+    return res.success(NumberNode(tok));
   } else if(tok.type == LPR_T) {
     res.register_(advance());
     ParseResult expr_res = expr();
@@ -188,8 +192,7 @@ ParseResult Parser::bin_op(
   if(left_res.error) return left_res; // check if theres an error and if yes, return early
   NodeVariant left = left_res.node.value(); // extract node from left_res
 
-  for(size_t i=0; i<ops.size(); i++) {
-    while(cur_tok && cur_tok->type == ops.at(i)) { // check while cur_tok exists and
+   while(cur_tok && std::find(ops.begin(), ops.end(), cur_tok->type)!=ops.end()) { // check while cur_tok exists and
       // the type is in the vector
       Token op_tok = cur_tok.value(); // get operator token which is just current token
       res.register_(advance()); // advance
@@ -201,7 +204,6 @@ ParseResult Parser::bin_op(
 
       left = std::make_shared<BinOpNode>(left, op_tok, right); // finally, make
       // a shared binopnode pointer consisting of the 3 elements
-    }
   }
 
   return res.success(left);

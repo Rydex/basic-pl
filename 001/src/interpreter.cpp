@@ -53,7 +53,7 @@ NumberPair Number::divided_by(const Number& other) const {
 		return { std::nullopt, RTException(
 			other.pos_start.value(), other.pos_end.value(),
 			"division by zero"
-		) };
+			) };
 	}
 
 	return { Number(this->value / other.value), std::nullopt };
@@ -87,11 +87,17 @@ RTResult Interpreter::visit_NumberNode(const NumberNode& node) {
 
 	if(std::holds_alternative<int>(value)) {
 		return RTResult().success(
-			Number(std::get<int>(value)).set_pos(node_value.pos_start.value())
+			Number(std::get<int>(value)).set_pos(
+				node_value.pos_start.value(),
+				node_value.pos_end.value()
+			)
 		);
 	} else {
 		return RTResult().success(
-			Number(std::get<double>(value)).set_pos(node_value.pos_start.value())
+			Number(std::get<double>(value)).set_pos(
+				node_value.pos_start.value(),
+				node_value.pos_end.value()
+			)
 		);
 	}
 }
@@ -128,13 +134,14 @@ RTResult Interpreter::visit_BinOpNode(const BinOpNode& node) {
 		error = err;
 	}
 
-	Number result_pos = *result;
-	result_pos.set_pos(node.pos_start.value(), node.pos_end.value());
 
 	if(error) return res.failure(error.value());
 
-	else
+	if(result.has_value()) {
+		Number result_pos = result.value();
+		result_pos.set_pos(node.pos_start.value(), node.pos_end.value());
 		return res.success(result_pos);
+	}
 }
 
 RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node) {

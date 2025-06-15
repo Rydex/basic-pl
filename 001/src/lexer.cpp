@@ -68,11 +68,12 @@ Token Lexer::make_number() {
     advance();
   }
 
-  if(dot_count == 0) {
-    return Token(INT_T, std::stoi(num_str), pos_start, pos);
-  } else {
-    return Token(FLT_T, std::stof(num_str), pos_start, pos);
-  }
+  return Token(
+    dot_count == 0 ? INT_T : FLT_T,
+    dot_count == 0 ? std::stoi(num_str) : std::stof(num_str),
+    pos_start,
+    pos
+  );
 }
 
 RunType run(const std::string& fn, const std::string& text) {
