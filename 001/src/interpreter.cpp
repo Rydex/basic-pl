@@ -135,13 +135,11 @@ RTResult Interpreter::visit_BinOpNode(const BinOpNode& node) {
 	}
 
 
-	if(error) return res.failure(error.value());
+	if(error && !result.has_value()) return res.failure(error.value());
 
-	if(result.has_value()) {
-		Number result_pos = result.value();
-		result_pos.set_pos(node.pos_start.value(), node.pos_end.value());
-		return res.success(result_pos);
-	}
+	Number result_pos = result.value();
+	result_pos.set_pos(node.pos_start.value(), node.pos_end.value());
+	return res.success(result_pos);
 }
 
 RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node) {
@@ -155,6 +153,7 @@ RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node) {
 		const auto&[result, error] = number.multiplied_by(Number(-1));
 	}
 
-	else
-		return res.success(number.set_pos(node.pos_start, node.pos_end));
+	if(err) return res.failure(err.value());
+	
+	return res.success(number.set_pos(node.pos_start, node.pos_end));
 }
