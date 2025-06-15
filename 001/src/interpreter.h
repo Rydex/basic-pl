@@ -34,4 +34,14 @@ public:
 	Number visit_UnaryOpNode(const UnaryOpNode& node);
 };
 
+class RTResult {
+public:
+	std::optional<NodeVariant> value = std::nullopt;
+	std::optional<Exception> error = std::nullopt;
+
+	NodeVariant register_(const RTResult& res);
+	RTResult& success(const NodeVariant& value);
+	RTResult& failure(const Exception& error);
+};
+
 #endif

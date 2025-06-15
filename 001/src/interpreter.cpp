@@ -5,6 +5,21 @@
 #include <sstream>
 #include <stdexcept>
 
+NodeVariant RTResult::register_(const RTResult& res) {
+	if(res.error) this->error = res.error;
+	return res.value.value();
+}
+
+RTResult& RTResult::success(const NodeVariant& value) {
+	this->value = value;
+	return *this;
+}
+
+RTResult& RTResult::failure(const Exception& error) {
+	this->error = error;
+	return *this;
+}
+
 Number::Number(double value): value(value) {
 	set_pos();
 }
