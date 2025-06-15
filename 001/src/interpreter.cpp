@@ -5,7 +5,7 @@
 #include <sstream>
 #include <stdexcept>
 
-Number::Number(std::optional<double> value): value(value) {
+Number::Number(double value): value(value) {
 	set_pos();
 }
 
@@ -20,24 +20,24 @@ Number& Number::set_pos(
 }
 
 Number Number::added_to(const Number& other) const {
-	return Number(this->value.value() + other.value.value());
+	return Number(this->value + other.value);
 }
 
 Number Number::subbed_by(const Number& other) const {
-	return Number(this->value.value() - other.value.value());
+	return Number(this->value - other.value);
 }
 
 Number Number::multiplied_by(const Number& other) const {
-	return Number(this->value.value() * other.value.value());
+	return Number(this->value * other.value);
 }
 
 Number Number::divided_by(const Number& other) const {
-	return Number(this->value.value() / other.value.value());
+	return Number(this->value / other.value);
 }
 
 std::string Number::as_string() const {
 	std::ostringstream oss;
-	oss << value.value();
+	oss << value;
 	return oss.str();
 }
 
@@ -71,8 +71,9 @@ Number Interpreter::visit_NumberNode(const NumberNode& node) {
 Number Interpreter::visit_BinOpNode(const BinOpNode& node) {
 	Number left = visit(node.left_node);
 	Number right = visit(node.right_node);
-	Number result(std::nullopt);
 
+	std::optional<Number> result;
+	
 	if(node.op_tok.type == PLS_T) {
 		result = left.added_to(right);
 	} else if(node.op_tok.type == MIN_T) {
