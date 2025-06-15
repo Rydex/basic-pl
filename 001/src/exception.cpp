@@ -45,6 +45,7 @@ RTException::RTException(
 
 std::string RTException::as_string() const {
   std::string result = generate_traceback();
+  result += this->message + ": " + this->details;
   result += "\n\n" + string_with_arrows(
     pos_start.get_ftxt(),
     pos_start,
