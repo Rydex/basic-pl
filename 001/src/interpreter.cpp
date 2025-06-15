@@ -12,12 +12,11 @@ Number RTResult::register_(const RTResult& res) {
 
 RTResult& RTResult::success(const Number& value) {
   this->value = value;
-  this->error = std::nullopt;
   return *this;
 }
 
-RTResult& RTResult::failure(const Exception& error) {
-  this->error = error;
+RTResult& RTResult::failure(const std::shared_ptr<Exception>& error) {
+  this->error = std::move(error);
   this->value = std::nullopt;
   return *this;
 }
@@ -43,27 +42,28 @@ Number& Number::set_context(const std::optional<Context>& context) {
 }
 
 NumberPair Number::added_to(const Number& other) const {
-  return { Number(this->value + other.value).set_context(this->context), std::nullopt };
+  return { 
+    Number(this->value + other.value).set_context(this->context), nullptr };
 }
 
 NumberPair Number::subbed_by(const Number& other) const {
-  return { Number(this->value - other.value).set_context(this->context), std::nullopt };
+  return { Number(this->value - other.value).set_context(this->context), nullptr };
 }
 
 NumberPair Number::multiplied_by(const Number& other) const {
-  return { Number(this->value * other.value).set_context(this->context), std::nullopt };
+  return { Number(this->value * other.value).set_context(this->context), nullptr };
 }
 
 NumberPair Number::divided_by(const Number& other) const {
   if(other.value == 0) {
-    return { std::nullopt, RTException(
+    return { std::nullopt, std::make_shared<RTException>(RTException(
       other.context,
       other.pos_start.value(), other.pos_end.value(),
       "division by zero"
-      ) };
+      )) };
   }
 
-  return { Number(this->value / other.value).set_context(this->context), std::nullopt };
+  return { Number(this->value / other.value).set_context(this->context), nullptr };
 }
 
 std::string Number::as_string() const {
@@ -118,7 +118,7 @@ RTResult Interpreter::visit_BinOpNode(const BinOpNode& node, const Context& cont
   if(res.error) return res;
 
   std::optional<Number> result;
-  std::optional<Exception> error;
+  std::shared_ptr<Exception> error;
 
   if(node.op_tok.type == PLS_T) {
     const auto&[res, err] = left.added_to(right);
@@ -142,7 +142,8 @@ RTResult Interpreter::visit_BinOpNode(const BinOpNode& node, const Context& cont
   }
 
 
-  if(error && !result.has_value()) return res.failure(error.value());
+  if(error && !result.has_value())
+    return res.failure(error);
 
   Number result_pos = result.value();
   result_pos.set_pos(node.pos_start.value(), node.pos_end.value());
@@ -160,7 +161,7 @@ RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node, const Context& 
     const auto&[result, error] = number.multiplied_by(Number(-1));
   }
 
-  if(err) return res.failure(err.value());
+  if(err) return res.failure(std::make_shared<Exception>(err.value()));
   
   return res.success(number.set_pos(node.pos_start, node.pos_end));
 }

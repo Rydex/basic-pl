@@ -4,7 +4,7 @@
 int main() {
   std::string input;
   do {
-    std::cout << "program (type exit to exit) > ";
+    std::cout << "program (type q to quit) > ";
     std::getline(std::cin, input);
 
     const auto&[ast, error] = run("<stdin>", input);
@@ -16,5 +16,5 @@ int main() {
         std::cout << ast->as_string() << '\n';
       }
     }
-  } while (input != "exit");
+  } while (input != "q");
 }

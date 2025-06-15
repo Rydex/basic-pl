@@ -43,12 +43,15 @@ token_pair Lexer::make_tokens() {
         Position pos_start = pos.copy();
         char ch = cur_char;
         advance();
-        return { std::vector<Token>{}, IllegalCharException(pos_start, pos, ch) };
+        return {
+          std::vector<Token>{},
+          std::make_shared<Exception>(IllegalCharException(pos_start, pos, ch))
+        };
       }
     }
 
     tokens.emplace_back(EOF_T, std::nullopt, pos);
-    return { tokens, std::nullopt };
+    return { tokens, nullptr };
 }
 
 Token Lexer::make_number() {
@@ -86,7 +89,7 @@ RunType run(const std::string& fn, const std::string& text) {
   // generate ast
   Parser parser(tokens);
   ParseResult ast = parser.parse();
-  if(ast.error) return { std::nullopt, ast.error };
+  if(ast.error) return { std::nullopt, std::make_shared<Exception>(ast.error.value()) };
 
   Context context("<stdin>");
 
@@ -94,8 +97,8 @@ RunType run(const std::string& fn, const std::string& text) {
   RTResult result = interpreter.visit(ast.node.value(), context);
 
   if(result.error) {
-    return { std::nullopt, result.error.value() };
+    return { std::nullopt, result.error };
   }
 
-  return { result.value.value(), std::nullopt };
+  return { result.value.value(), nullptr };
 }

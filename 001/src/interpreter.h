@@ -10,7 +10,7 @@ class Number;
 
 using NumberPair = std::pair<
   std::optional<Number>,
-  std::optional<Exception>
+  std::shared_ptr<Exception>
 >;
 
 class Number {
@@ -39,11 +39,11 @@ public:
 class RTResult {
 public:
   std::optional<Number> value = std::nullopt;
-  std::optional<Exception> error = std::nullopt;
+  std::shared_ptr<Exception> error = nullptr;
 
   Number register_(const RTResult& res);
   RTResult& success(const Number& value);
-  RTResult& failure(const Exception& error);
+  RTResult& failure(const std::shared_ptr<Exception>& error);
 };
 
 class Interpreter {

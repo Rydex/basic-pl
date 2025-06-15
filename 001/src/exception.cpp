@@ -1,5 +1,5 @@
 #include "exception.h"
-#include <stdexcept>
+#include <iostream>
 
 Exception::Exception(
   const Position& pos_start,
@@ -61,8 +61,11 @@ std::string RTException::generate_traceback() const {
   std::optional<Context> ctx = this->context;
 
   while(ctx) {
-    result += "  File" + pos.get_fn() + ", line " + std::to_string(pos.get_ln() + 1)
+    result = "  File " + pos.get_fn() + ", line " + std::to_string(pos.get_ln() + 1)
            +  ", in " + ctx->display_name + "\n" + result;
+
+    if(!ctx->parent.has_value() || !ctx->parent.value()) break;
+    if(!ctx->parent_entry_pos.has_value()) break;
 
     pos = ctx->parent_entry_pos.value();
     ctx = *ctx->parent.value();

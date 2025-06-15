@@ -20,7 +20,7 @@ const std::string PLS_T = "PLUS",
                   FLT_T = "FLOAT",
                   EOF_T = "EOF";
 
-using token_pair = std::pair<std::vector<Token>, std::optional<Exception>>;
+using token_pair = std::pair<std::vector<Token>, std::shared_ptr<Exception>>;
 
 class Lexer {
 private:
@@ -35,7 +35,7 @@ public:
   Token make_number();
 };
 
-using RunType = std::pair<std::optional<Number>, std::optional<Exception>>;
+using RunType = std::pair<std::optional<Number>, std::shared_ptr<Exception>>;
 
 RunType run(const std::string& fn, const std::string& text);
 
