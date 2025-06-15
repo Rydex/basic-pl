@@ -137,7 +137,7 @@ ParseResult Parser::parse() {
 }
 
 ParseResult Parser::power() {
-  return bin_op([this]() { return atom(); }, { POW_T }, [this]() { return factor(); });
+  return bin_op([this]() { return atom(); }, { POW_T, MOD_T }, [this]() { return factor(); });
 }
 
 ParseResult Parser::atom() {

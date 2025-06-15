@@ -7,7 +7,7 @@
 #include <sstream>
 #include "position.h"
 
-using TokenValue = std::variant<int, double>;
+using TokenValue = std::variant<int, double, std::string>;
 
 struct Token {
   std::string type;

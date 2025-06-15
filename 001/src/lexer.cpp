@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "position.h"
 #include "interpreter.h"
+#include <algorithm>
 
 Lexer::Lexer(const std::string& fn, const std::string& text): fn(fn), text(text) {
   advance();
@@ -34,6 +35,12 @@ token_pair Lexer::make_tokens() {
       } else if (cur_char == '^') {
         tokens.emplace_back(POW_T, std::nullopt, pos);
         advance();
+      } else if (cur_char == '%') {
+        tokens.emplace_back(MOD_T, std::nullopt, pos);
+        advance();
+      } else if (cur_char == '=') {
+        tokens.emplace_back(EQU_T, std::nullopt, pos);
+        advance();
       } else if (cur_char == '(') {
         tokens.emplace_back(LPR_T, std::nullopt, pos);
         advance();
@@ -42,6 +49,8 @@ token_pair Lexer::make_tokens() {
         advance();
       } else if ((std::isdigit(cur_char) || cur_char == '.') && cur_char != '.') {
         tokens.emplace_back(make_number());
+      } else if ((std::isalnum(cur_char) || cur_char == '_') && !std::isdigit(cur_char)) {
+        tokens.emplace_back(make_identifier());
       } else {
         Position pos_start = pos.copy();
         char ch = cur_char;
@@ -55,6 +64,10 @@ token_pair Lexer::make_tokens() {
 
     tokens.emplace_back(EOF_T, std::nullopt, pos);
     return { tokens, nullptr };
+}
+
+bool Lexer::in_keywords(const std::string& text) {
+  return std::find(KEYWORDS.cbegin(), KEYWORDS.cend(), text) != KEYWORDS.cend();
 }
 
 Token Lexer::make_number() {
@@ -81,6 +94,20 @@ Token Lexer::make_number() {
     pos_start,
     pos
   );
+}
+
+Token Lexer::make_identifier() {
+  std::string id_str = "";
+  Position pos_start = pos.copy();
+
+  while(cur_char != '\0' && (std::isalnum(cur_char) || cur_char == '_') && !std::isdigit(cur_char)) {
+    id_str += cur_char;
+    advance();
+  }
+
+  std::string type = ( in_keywords(id_str) ) ? KWD_T : ID_T;
+
+  return Token(type, id_str, pos_start, pos);
 }
 
 RunType run(const std::string& fn, const std::string& text) {

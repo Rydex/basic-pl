@@ -1,4 +1,5 @@
 #include "interpreter.h"
+#include "exception.h"
 #include "parser.h"
 #include "position.h"
 #include "lexer.h"
@@ -69,6 +70,18 @@ NumberPair Number::divided_by(const Number& other) const {
 
 NumberPair Number::powed_by(const Number& other) const {
   return { Number(std::pow(this->value, other.value)).set_context(this->context), nullptr };
+}
+
+NumberPair Number::modded_by(const Number& other) const {
+  if(other.value == 0) {
+    return { std::nullopt, std::make_shared<RTException>(RTException(
+      other.context,
+      other.pos_start.value(), other.pos_end.value(),
+      "modulus by zero"
+    )) };
+  }
+
+  return { Number(std::fmod(this->value, other.value)).set_context(this->context), nullptr };
 }
 
 std::string Number::as_string() const {
@@ -147,6 +160,11 @@ RTResult Interpreter::visit_BinOpNode(const BinOpNode& node, const Context& cont
 
   } else if(node.op_tok.type == POW_T) {
     const auto&[res, err] = left.powed_by(right);
+    result = res;
+    error = err;
+
+  } else if(node.op_tok.type == MOD_T) {
+    const auto&[res,err] = left.modded_by(right);
     result = res;
     error = err;
 

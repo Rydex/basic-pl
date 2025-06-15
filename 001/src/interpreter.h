@@ -33,6 +33,7 @@ public:
   NumberPair multiplied_by(const Number& other) const;
   NumberPair divided_by(const Number& other) const;
   NumberPair powed_by(const Number& other) const;
+  NumberPair modded_by(const Number& other) const;
 
   std::string as_string() const;
 };
