@@ -87,7 +87,7 @@ RunType run(const std::string& fn, const std::string& text) {
   if(ast.error) return { std::nullopt, ast.error };
 
   Interpreter interpreter;
-  RTResult result = interpreter.visit(ast.node.value());
+  Number result = interpreter.visit(ast.node.value());
 
-  return { result.value.value(), result.error.value() };
+  return { result, std::nullopt };
 }
