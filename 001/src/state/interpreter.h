@@ -1,9 +1,9 @@
 #ifndef INTERPRETER
 #define INTERPRETER
 
-#include "context.h"
-#include "parser.h"
-#include "position.h"
+#include "../context.h"
+#include "../parser.h"
+#include "../position.h"
 #include <functional>
 
 class Number;

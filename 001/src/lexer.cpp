@@ -2,7 +2,7 @@
 #include "context.h"
 #include "parser.h"
 #include "position.h"
-#include "interpreter.h"
+#include "state/interpreter.h"
 #include <algorithm>
 
 Lexer::Lexer(const std::string& fn, const std::string& text): fn(fn), text(text) {

@@ -5,7 +5,7 @@
 #include <vector>
 #include <utility>
 #include "exception.h"
-#include "interpreter.h"
+#include "state/interpreter.h"
 #include "token.h"
 #include "position.h"
 #include "parser.h"

@@ -1,5 +1,35 @@
 #include "nodes.h"
 
+Position get_pos_end(const NodeVariant& node) {
+  return std::visit([](const auto& val) -> Position {
+    if constexpr (std::is_same_v<std::decay_t<decltype(val)>, NumberNode>) {
+      return val.pos_end;
+    } else if constexpr (
+      std::is_same_v<decltype(val), SharedBin> ||
+      std::is_same_v<decltype(val), SharedUnary>
+    ) {
+      return val->pos_end.value();
+    } else {
+      throw std::runtime_error("get_pos_end: unhandled node type");
+    }
+  }, node);
+}
+
+Position get_pos_start(const NodeVariant& node) {
+  return std::visit([](const auto& val) -> Position {
+    if constexpr (std::is_same_v<std::decay_t<decltype(val)>, NumberNode>) {
+      return val.pos_start;
+    } else if constexpr (
+      std::is_same_v<decltype(val), SharedBin> ||
+      std::is_same_v<decltype(val), SharedUnary>
+    ) {
+      return val->pos_start.value();
+    } else {
+      throw std::runtime_error("get_pos_start: unhandled node type");
+    }
+  }, node);
+}
+
 std::string stringify_node(const NodeVariant& node) {
   return std::visit([](const auto& val) -> std::string {
 
@@ -23,13 +53,7 @@ UnaryOpNode::UnaryOpNode(
   const Token& op_tok,
   const NodeVariant& node
 ): op_tok(op_tok), node(node) {
-  pos_end = std::visit([](const auto& val) -> Position {
-    if constexpr(std::is_same_v<std::decay_t<decltype(val)>, NumberNode>) {
-      return val.pos_end;
-    } else {
-      return val->pos_end.value();
-    }
-  }, node);
+  pos_end = get_pos_end(node);
 }
 
 NumberNode::NumberNode(const Token& token)
@@ -42,26 +66,6 @@ std::string NumberNode::as_string() const {
 std::string BinOpNode::as_string() const {
   return '(' + stringify_node(left_node) + ", " + op_tok.as_string() + ", "
              + stringify_node(right_node) + ')';
-}
-
-Position get_pos_end(const NodeVariant& node) {
-  return std::visit([](const auto& val) -> Position {
-    if constexpr (std::is_same_v<std::decay_t<decltype(val)>, NumberNode>) {
-      return val.pos_end;
-    } else {
-      return val->pos_end.value();
-    }
-  }, node);
-}
-
-Position get_pos_start(const NodeVariant& node) {
-  return std::visit([](const auto& val) -> Position {
-    if constexpr (std::is_same_v<std::decay_t<decltype(val)>, NumberNode>) {
-      return val.pos_start;
-    } else {
-      return val->pos_start.value();
-    }
-  }, node);
 }
 
 BinOpNode::BinOpNode(

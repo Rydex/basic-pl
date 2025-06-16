@@ -2,7 +2,6 @@
 #include "exception.h"
 #include "lexer.h"
 #include "nodes.h"
-#include "utils/ast_utils.h"
 #include <algorithm>
 #include <memory>
 #include <variant>
@@ -150,12 +149,13 @@ ParseResult Parser::expr() {
     }
 
     res.register_(advance());
-    RegisterVariant other_expr = res.register_(expr());
+    ParseResult other_expr = expr();
+    res.register_(other_expr);
 
     if(res.error) return res;
 
     // return res.success(VarAssignNode(var_name, other_expr));
-    return res.success(std::make_shared<VarAssignNode>(var_name, convert(other_expr)));
+    return res.success(std::make_shared<VarAssignNode>(var_name, other_expr.node.value()));
   }
 
   return bin_op([this]() { return term(); }, { PLS_T, MIN_T });

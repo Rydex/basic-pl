@@ -13,10 +13,10 @@ add_executable(${PROJECT_NAME}
     src/exception.cpp
     src/position.cpp
     src/parser.cpp
-    src/interpreter.cpp
     src/context.cpp
     src/nodes.cpp
     src/utils/ast_utils.cpp
+    src/state/interpreter.cpp
 )
 add_library(mylib
     src/lexer.cpp
@@ -24,7 +24,7 @@ add_library(mylib
     src/exception.cpp
     src/position.cpp
     src/parser.cpp
-    src/interpreter.cpp
+    src/state/interpreter.cpp
     src/context.cpp
     src/nodes.cpp
     src/utils/ast_utils.cpp
@@ -32,7 +32,7 @@ add_library(mylib
     src/exception.h
     src/position.h
     src/parser.h
-    src/interpreter.h
+    src/state/interpreter.h
     src/context.h
     src/nodes.h
     src/utils/ast_utils.h

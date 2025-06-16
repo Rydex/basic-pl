@@ -1,7 +1,7 @@
 #include "interpreter.h"
-#include "exception.h"
-#include "position.h"
-#include "lexer.h"
+#include "../exception.h"
+#include "../position.h"
+#include "../lexer.h"
 #include <sstream>
 #include <stdexcept>
 #include <cmath>
