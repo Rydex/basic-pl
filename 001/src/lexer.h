@@ -48,7 +48,7 @@ public:
   Token make_identifier();
 };
 
-using RunType = std::pair<std::optional<Number>, std::shared_ptr<Exception>>;
+using RunType = std::pair<std::optional<RTVariant>, std::shared_ptr<Exception>>;
 
 RunType run(const std::string& fn, const std::string& text);
 

@@ -2,6 +2,7 @@
 #include "../exception.h"
 #include "../position.h"
 #include "../lexer.h"
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <cmath>
@@ -9,12 +10,19 @@
 Number RTResult::register_(const RTResult& res) {
   if(res.error) this->error = res.error;
   if(res.value)
-    return res.value.value();
+    //return res.value.value();
+    return std::visit([&](const auto& val) -> Number {
+      if constexpr (std::is_same_v<std::decay_t<decltype(val)>, Number>) {
+        return val;
+      } else {
+        throw std::runtime_error("unsupported in register_()");
+      }
+    }, res.value.value());
 
   return Number(-1);
 }
 
-RTResult& RTResult::success(const Number& value) {
+RTResult& RTResult::success(const RTVariant& value) {
   this->value = value;
   return *this;
 }
@@ -92,7 +100,7 @@ std::string Number::as_string() const {
   return oss.str();
 }
 
-RTResult Interpreter::visit(const NodeVariant& node, const Context& context) {
+RTResult Interpreter::visit(const NodeVariant& node, Context& context) {
   return std::visit([&](const auto& val) -> RTResult {
     using T = std::decay_t<decltype(val)>;
 
@@ -102,13 +110,52 @@ RTResult Interpreter::visit(const NodeVariant& node, const Context& context) {
       return visit_BinOpNode(*val, context);
     } else if constexpr (std::is_same_v<T, SharedUnary>) {
       return visit_UnaryOpNode(*val, context);
+    } else if constexpr (std::is_same_v<T, SharedAssign>) {
+      return visit_VarAssignNode(*val, context);
+    } else if constexpr (std::is_same_v<T, VarAccessNode>) {
+      return visit_VarAccessNode(val, context);
     }
 
     throw std::runtime_error("no visit method defined");
   }, node);
 }
 
-RTResult Interpreter::visit_NumberNode(const NumberNode& node, const Context& context) {
+RTResult Interpreter::visit_VarAccessNode(const VarAccessNode& node, Context& context) {
+  RTResult res;
+  std::string var_name = std::get<std::string>(node.var_name_tok.value.value());
+
+  std::optional<TokenValue> value = context.symbol_table->get(var_name);
+
+  if(!value) {
+    return res.failure(std::make_shared<RTException>(RTException(
+      context,
+      node.pos_start, node.pos_end,
+      var_name + " is not defined"
+    )));
+  }
+
+  // return res.success(value.value());
+  return std::visit([&](const auto& val) -> RTResult {
+    return res.success(val);
+  }, value.value());
+}
+
+RTResult Interpreter::visit_VarAssignNode(VarAssignNode& node, Context& context) {
+  RTResult res;
+  std::string var_name = std::get<std::string>(node.var_name_tok.value.value());
+
+  RTResult value_expr = visit(node.value_node, context);
+  Number value = res.register_(value_expr);
+
+  if(res.error) return res;
+
+
+  if(res.error) return res;
+
+  context.symbol_table->set(var_name, value.get_value());
+}
+
+RTResult Interpreter::visit_NumberNode(const NumberNode& node, Context& context) {
   Token node_value = node.tok.value();
   TokenValue value = node_value.value.value();
 
@@ -129,7 +176,7 @@ RTResult Interpreter::visit_NumberNode(const NumberNode& node, const Context& co
   }
 }
 
-RTResult Interpreter::visit_BinOpNode(const BinOpNode& node, const Context& context) {
+RTResult Interpreter::visit_BinOpNode(const BinOpNode& node, Context& context) {
   RTResult res;
   Number left = res.register_(visit(node.left_node, context));
   if(res.error) return res;
@@ -181,7 +228,7 @@ RTResult Interpreter::visit_BinOpNode(const BinOpNode& node, const Context& cont
   return res.success(result_pos);
 }
 
-RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node, const Context& context) {
+RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node, Context& context) {
   RTResult res;
   Number number = res.register_(visit(node.node, context));
   if(res.error) return res;

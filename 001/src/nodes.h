@@ -44,7 +44,7 @@ struct VarAccessNode {
 };
 
 struct VarAssignNode {
-  Token var_name;
+  Token var_name_tok;
   NodeVariant value_node;
 };
 

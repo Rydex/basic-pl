@@ -22,11 +22,13 @@ protected:
 public:
   Number(double value);
 
+  // setters
   Number& set_pos(
     const std::optional<Position>& pos_start = std::nullopt,
     const std::optional<Position>& pos_end = std::nullopt
   );
   Number& set_context(const std::optional<Context>& context = std::nullopt);
+  inline TokenValue get_value() const { return value; };
 
   NumberPair added_to(const Number& other) const;
   NumberPair subbed_by(const Number& other) const;
@@ -38,22 +40,26 @@ public:
   std::string as_string() const;
 };
 
+using RTVariant = std::variant<Number, int, double, std::string>;
+
 class RTResult {
 public:
-  std::optional<Number> value = std::nullopt;
+  std::optional<RTVariant> value = std::nullopt;
   std::shared_ptr<Exception> error = nullptr;
 
   Number register_(const RTResult& res);
-  RTResult& success(const Number& value);
+  RTResult& success(const RTVariant& value);
   RTResult& failure(const std::shared_ptr<Exception>& error);
 };
 
 class Interpreter {
 public:
-  RTResult visit(const NodeVariant& node, const Context& context);
-  RTResult visit_NumberNode(const NumberNode& node, const Context& context);
-  RTResult visit_BinOpNode(const BinOpNode& node, const Context& context);
-  RTResult visit_UnaryOpNode(const UnaryOpNode& node, const Context& context);
+  RTResult visit(const NodeVariant& node, Context& context);
+  RTResult visit_NumberNode(const NumberNode& node, Context& context);
+  RTResult visit_BinOpNode(const BinOpNode& node, Context& context);
+  RTResult visit_UnaryOpNode(const UnaryOpNode& node, Context& context);
+  RTResult visit_VarAccessNode(const VarAccessNode& node, Context& context);
+  RTResult visit_VarAssignNode(VarAssignNode& node, Context& context);
 };
 
 

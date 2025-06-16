@@ -17,6 +17,7 @@ add_executable(${PROJECT_NAME}
     src/nodes.cpp
     src/utils/ast_utils.cpp
     src/state/interpreter.cpp
+    src/state/symbol_table.cpp
 )
 add_library(mylib
     src/lexer.cpp
@@ -25,6 +26,7 @@ add_library(mylib
     src/position.cpp
     src/parser.cpp
     src/state/interpreter.cpp
+    src/state/symbol_table.cpp
     src/context.cpp
     src/nodes.cpp
     src/utils/ast_utils.cpp
@@ -33,6 +35,7 @@ add_library(mylib
     src/position.h
     src/parser.h
     src/state/interpreter.h
+    src/state/symbol_table.h
     src/context.h
     src/nodes.h
     src/utils/ast_utils.h
