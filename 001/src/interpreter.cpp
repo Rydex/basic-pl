@@ -8,7 +8,10 @@
 
 Number RTResult::register_(const RTResult& res) {
   if(res.error) this->error = res.error;
-  return res.value.value();
+  if(res.value)
+    return res.value.value();
+
+  return Number(-1);
 }
 
 RTResult& RTResult::success(const Number& value) {
