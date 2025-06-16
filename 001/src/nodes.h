@@ -18,18 +18,36 @@ struct NumberNode {
 
 struct BinOpNode;
 struct UnaryOpNode;
+struct VarAssignNode;
+struct VarAccessNode;
 
 // helpers
 using SharedBin = std::shared_ptr<BinOpNode>;
 using SharedUnary = std::shared_ptr<UnaryOpNode>;
+using SharedAssign = std::shared_ptr<VarAssignNode>;
 
 using NodeVariant = std::variant<
   NumberNode,
   SharedUnary,
-  SharedBin
+  SharedBin,
+  SharedAssign,
+  VarAccessNode
 >;
 
 std::string stringify_node(const NodeVariant& node);
+
+struct VarAccessNode {
+  Token var_name_tok;
+
+  Position pos_start = var_name_tok.pos_start.value();
+  Position pos_end = var_name_tok.pos_end.value();
+};
+
+struct VarAssignNode {
+  Token var_name;
+  NodeVariant value_node;
+};
+
 
 struct BinOpNode {
   NodeVariant left_node;

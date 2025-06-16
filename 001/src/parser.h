@@ -42,7 +42,9 @@ using RegisterVariant = std::variant<
   NumberNode,
   SharedBin,
   Token,
-  SharedUnary
+  SharedUnary,
+  SharedAssign,
+  VarAccessNode
 >;
 
 class ParseResult {

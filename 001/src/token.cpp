@@ -1,5 +1,6 @@
 #include "token.h"
 #include <string>
+#include <type_traits>
 
 Token::Token(
   const std::string& type,
@@ -29,7 +30,7 @@ std::string Token::as_string() const {
   //   return type + ':' + oss.str();
   // }
 
-  return std::visit([this](auto&& val) -> std::string {
+  return std::visit([this](const auto& val) -> std::string {
     if constexpr (std::is_same_v<std::decay_t<decltype(val)>, int>) {
       return type + ':' + std::to_string(val);
     } else if constexpr (std::is_same_v<std::decay_t<decltype(val)>, double>) {
@@ -40,4 +41,19 @@ std::string Token::as_string() const {
       return type + ':' + val;
     }
   }, value.value());
+}
+
+bool Token::matches(const std::string& type, const TokenValue& value) {
+  // return this->type == type && this->value.value() == value;
+
+  return std::visit([&](const auto& lhs, const auto& rhs) -> bool {
+    using L = std::decay_t<decltype(lhs)>;
+    using R = std::decay_t<decltype(rhs)>;
+
+    if constexpr (std::is_same_v<L, R>) {
+      return lhs == rhs;
+    } else {
+      return false;
+    }
+  }, this->value.value(), value);
 }

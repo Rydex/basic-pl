@@ -21,6 +21,8 @@ struct Token {
     const std::optional<Position>& pos_end = std::nullopt
   );
 
+  bool matches(const std::string& type, const TokenValue& value);
+
   std::string as_string() const;
 };
 

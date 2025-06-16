@@ -2,10 +2,15 @@
 
 std::string stringify_node(const NodeVariant& node) {
   return std::visit([](const auto& val) -> std::string {
-    if constexpr (std::is_same_v<std::decay_t<decltype(val)>, NumberNode>) {
+
+    using T = std::decay_t<decltype(val)>;
+
+    if constexpr (std::is_same_v<T, NumberNode>) {
       return val.as_string();
-    } else {
+    } else if constexpr (std::is_same_v<T, SharedBin> || std::is_same_v<T, SharedUnary>) {
       return val->as_string();
+    } else {
+      return "<null>";
     }
   }, node);
 }

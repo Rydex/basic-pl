@@ -2,6 +2,7 @@
 #include "exception.h"
 #include "lexer.h"
 #include <algorithm>
+#include <memory>
 #include <variant>
 
 // parse result
@@ -76,6 +77,10 @@ ParseResult Parser::atom() {
     res.register_(advance());
     return res.success(NumberNode(tok));
 
+  } else if(tok.type == ID_T) {
+    res.register_(advance());
+    return res.success(VarAccessNode{tok});
+
   } else if(tok.type == LPR_T) {
     res.register_(advance());
     ParseResult expr_res = expr();
@@ -120,6 +125,41 @@ ParseResult Parser::term() {
 }
 
 ParseResult Parser::expr() {
+  ParseResult res;
+
+  if(cur_tok->matches(KWD_T, "VAR")) {
+    res.register_(advance());
+
+    if(cur_tok->type != ID_T) {
+      return res.failure(std::make_shared<InvalidSyntaxException>(InvalidSyntaxException(
+        cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+        "expected identifier"
+      )));
+    }
+
+    Token var_name = cur_tok.value();
+    res.register_(advance());
+
+    if(cur_tok->type != EQU_T) {
+      return res.failure(std::make_shared<InvalidSyntaxException>(InvalidSyntaxException(
+        cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+        "expected '='"
+      )));
+    }
+
+    res.register_(advance());
+    RegisterVariant other_expr = res.register_(expr());
+
+    if(res.error) return res;
+
+    // return res.success(VarAssignNode(var_name, other_expr));
+    return std::visit([&](const auto& val) -> ParseResult {
+      if constexpr (std::is_same_v<std::decay_t<decltype(val)>, SharedAssign>) {
+        return res.success(std::make_shared<VarAssignNode>(var_name, other_expr));
+      }
+    }, other_expr);
+  }
+
   return bin_op([this]() { return term(); }, { PLS_T, MIN_T });
 }
 
