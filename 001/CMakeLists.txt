@@ -16,6 +16,7 @@ add_executable(${PROJECT_NAME}
     src/interpreter.cpp
     src/context.cpp
     src/nodes.cpp
+    src/utils/ast_utils.cpp
 )
 add_library(mylib
     src/lexer.cpp
@@ -26,6 +27,7 @@ add_library(mylib
     src/interpreter.cpp
     src/context.cpp
     src/nodes.cpp
+    src/utils/ast_utils.cpp
     src/token.h
     src/exception.h
     src/position.h
@@ -33,5 +35,6 @@ add_library(mylib
     src/interpreter.h
     src/context.h
     src/nodes.h
+    src/utils/ast_utils.h
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE mylib)
