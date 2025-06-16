@@ -1,6 +1,8 @@
 #include "parser.h"
 #include "exception.h"
 #include "lexer.h"
+#include "nodes.h"
+#include "utils/ast_utils.h"
 #include <algorithm>
 #include <memory>
 #include <variant>
@@ -153,11 +155,7 @@ ParseResult Parser::expr() {
     if(res.error) return res;
 
     // return res.success(VarAssignNode(var_name, other_expr));
-    return std::visit([&](const auto& val) -> ParseResult {
-      if constexpr (std::is_same_v<std::decay_t<decltype(val)>, SharedAssign>) {
-        return res.success(std::make_shared<VarAssignNode>(var_name, other_expr));
-      }
-    }, other_expr);
+    return res.success(std::make_shared<VarAssignNode>(var_name, convert(other_expr)));
   }
 
   return bin_op([this]() { return term(); }, { PLS_T, MIN_T });
