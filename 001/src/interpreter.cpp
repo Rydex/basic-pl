@@ -1,6 +1,5 @@
 #include "interpreter.h"
 #include "exception.h"
-#include "parser.h"
 #include "position.h"
 #include "lexer.h"
 #include <sstream>
@@ -188,6 +187,9 @@ RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node, const Context& 
 
   if(node.op_tok.type == MIN_T) {
     const auto&[result, error] = number.multiplied_by(Number(-1));
+
+    number = result.value();
+    err = error;
   }
 
   if(err) return res.failure(err);
