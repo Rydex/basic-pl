@@ -119,7 +119,7 @@ RunType run(const std::string& fn, const std::string& text) {
   // generate ast
   Parser parser(tokens);
   ParseResult ast = parser.parse();
-  if(ast.error) return { std::nullopt, std::make_shared<Exception>(ast.error.value()) };
+  if(ast.error) return { std::nullopt, ast.error };
 
   Context context("<stdin>");
 

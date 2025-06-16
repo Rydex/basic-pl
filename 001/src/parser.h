@@ -8,63 +8,7 @@
 #include <vector>
 #include "token.h"
 #include "exception.h"
-
-// nodes
-
-struct NumberNode {
-  std::optional<Token> tok;
-  Position pos_start = tok->pos_start.value();
-  Position pos_end = tok->pos_end.value();
-
-  NumberNode(const Token& token);
-
-  std::string as_string() const;
-};
-
-struct BinOpNode;
-struct UnaryOpNode;
-
-// helpers
-using SharedBin = std::shared_ptr<BinOpNode>;
-using SharedUnary = std::shared_ptr<UnaryOpNode>;
-
-using NodeVariant = std::variant<
-  NumberNode,
-  SharedUnary,
-  SharedBin
->;
-
-std::string stringify_node(const NodeVariant& node);
-
-struct BinOpNode {
-  NodeVariant left_node;
-  Token op_tok;
-  NodeVariant right_node;
-  std::optional<Position> pos_start, pos_end;
-  
-  BinOpNode(
-    const NodeVariant& left_node,
-    const Token& op_tok,
-    const NodeVariant& right_node
-  );
-
-  std::string as_string() const;
-};
-
-struct UnaryOpNode {
-  Token op_tok;
-  NodeVariant node;
-  std::optional<Position> pos_start = op_tok.pos_start.value(), pos_end;
-
-  UnaryOpNode(
-    const Token& op_tok,
-    const NodeVariant& node
-  );
-
-  std::string as_string() const;
-};
-
-// end nodes
+#include "nodes.h"
 
 class ParseResult;
 
@@ -103,11 +47,11 @@ using RegisterVariant = std::variant<
 
 class ParseResult {
 public:
-  std::optional<Exception> error = std::nullopt;
+  std::shared_ptr<Exception> error = nullptr;
   std::optional<NodeVariant> node = std::nullopt;
   RegisterVariant register_(const RegisterVariant& res);
   ParseResult& success(const NodeVariant& node);
-  ParseResult& failure(const std::optional<Exception>& error);
+  ParseResult& failure(const std::shared_ptr<Exception>& error);
 };
 
 Position get_pos_end(const NodeVariant& node);

@@ -184,13 +184,13 @@ RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node, const Context& 
   Number number = res.register_(visit(node.node, context));
   if(res.error) return res;
 
-  std::optional<Exception> err;
+  std::shared_ptr<Exception> err;
 
   if(node.op_tok.type == MIN_T) {
     const auto&[result, error] = number.multiplied_by(Number(-1));
   }
 
-  if(err) return res.failure(std::make_shared<Exception>(err.value()));
+  if(err) return res.failure(err);
   
   return res.success(number.set_pos(node.pos_start, node.pos_end));
 }

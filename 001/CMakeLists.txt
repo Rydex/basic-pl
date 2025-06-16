@@ -15,6 +15,7 @@ add_executable(${PROJECT_NAME}
     src/parser.cpp
     src/interpreter.cpp
     src/context.cpp
+    src/nodes.cpp
 )
 add_library(mylib
     src/lexer.cpp
@@ -24,11 +25,13 @@ add_library(mylib
     src/parser.cpp
     src/interpreter.cpp
     src/context.cpp
+    src/nodes.cpp
     src/token.h
     src/exception.h
     src/position.h
     src/parser.h
     src/interpreter.h
     src/context.h
+    src/nodes.h
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE mylib)
