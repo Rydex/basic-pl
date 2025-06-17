@@ -153,6 +153,7 @@ RTResult Interpreter::visit_VarAssignNode(VarAssignNode& node, Context& context)
   if(res.error) return res;
 
   context.symbol_table->set(var_name, value.get_value());
+  return res.success(value);
 }
 
 RTResult Interpreter::visit_NumberNode(const NumberNode& node, Context& context) {

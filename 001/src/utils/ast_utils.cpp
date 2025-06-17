@@ -17,3 +17,35 @@ NodeVariant convert(const RegisterVariant& val) {
     }
   }, val);
 }
+
+Position get_pos_end(const NodeVariant& node) {
+  return std::visit([](const auto& val) -> Position {
+    using T = std::decay_t<decltype(val)>;
+
+    if constexpr (std::is_same_v<T, NumberNode>) {
+      return val.pos_end;
+    } else if constexpr (
+      std::is_same_v<T, SharedBin> ||
+      std::is_same_v<T, SharedUnary>
+    ) {
+      return val->pos_end.value();
+    } else {
+      throw std::runtime_error("get_pos_end: unhandled node type");
+    }
+  }, node);
+}
+
+Position get_pos_start(const NodeVariant& node) {
+  return std::visit([](const auto& val) -> Position {
+    if constexpr (std::is_same_v<std::decay_t<decltype(val)>, NumberNode>) {
+      return val.pos_start;
+    } else if constexpr (
+      std::is_same_v<decltype(val), SharedBin> ||
+      std::is_same_v<decltype(val), SharedUnary>
+    ) {
+      return val->pos_start.value();
+    } else {
+      throw std::runtime_error("get_pos_start: unhandled node type");
+    }
+  }, node);
+}

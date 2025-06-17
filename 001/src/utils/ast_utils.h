@@ -8,4 +8,7 @@
 
 NodeVariant convert(const RegisterVariant& val);
 
+Position get_pos_end(const NodeVariant& node);
+Position get_pos_start(const NodeVariant& node);
+
 #endif
