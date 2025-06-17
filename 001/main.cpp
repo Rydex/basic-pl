@@ -20,15 +20,12 @@ int main() {
         if constexpr (std::is_same_v<T, std::string>) {
           std::cout << val << '\n';
 
-        } else if constexpr (std::is_same_v<T, double> || std::is_same_v<T, int>) {
-          std::ostringstream oss;
-          oss << val;
-          std::cout << oss.str() << '\n';
-
         } else if constexpr (std::is_same_v<T, Number>) {
           std::visit([](const auto& inner) -> void {
             if constexpr (std::is_same_v<std::decay_t<decltype(inner)>, double>) {
-              std::cout << std::to_string(inner) << '\n';
+              std::ostringstream oss;
+              oss << inner;
+              std::cout << oss.str() << '\n';
             }
           }, val.get_value());
         }
