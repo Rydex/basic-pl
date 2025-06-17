@@ -49,7 +49,7 @@ token_pair Lexer::make_tokens() {
         advance();
       } else if ((std::isdigit(cur_char) || cur_char == '.') && cur_char != '.') {
         tokens.emplace_back(make_number());
-      } else if ((std::isalnum(cur_char) || cur_char == '_') && !std::isdigit(cur_char)) {
+      } else if ((std::isalnum(cur_char) || cur_char == '_')) {
         tokens.emplace_back(make_identifier());
       } else {
         Position pos_start = pos.copy();
@@ -100,7 +100,7 @@ Token Lexer::make_identifier() {
   std::string id_str = "";
   Position pos_start = pos.copy();
 
-  while(cur_char != '\0' && (std::isalnum(cur_char) || cur_char == '_') && !std::isdigit(cur_char)) {
+  while(cur_char != '\0' && (std::isalnum(cur_char) || cur_char == '_')) {
     id_str += cur_char;
     advance();
   }
@@ -133,7 +133,7 @@ RunType run(const std::string& fn, const std::string& text) {
 
   if(result.error) {
     return { std::nullopt, result.error };
-  }
+  }  
 
   return { result.value.value(), nullptr };
 }

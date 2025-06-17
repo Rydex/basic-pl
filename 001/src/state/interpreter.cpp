@@ -101,7 +101,7 @@ std::string Number::as_string() const {
   return oss.str();
 }
 
-RTResult Interpreter::visit(const NodeVariant& node, const Context& context) {
+RTResult Interpreter::visit(const NodeVariant& node, Context& context) {
   return std::visit([&](const auto& val) -> RTResult {
     using T = std::decay_t<decltype(val)>;
 
@@ -121,7 +121,7 @@ RTResult Interpreter::visit(const NodeVariant& node, const Context& context) {
   }, node);
 }
 
-RTResult Interpreter::visit_VarAccessNode(const VarAccessNode& node, const Context& context) {
+RTResult Interpreter::visit_VarAccessNode(const VarAccessNode& node, Context& context) {
   RTResult res;
   std::string var_name = std::get<std::string>(node.var_name_tok.value.value());
 
@@ -140,8 +140,6 @@ RTResult Interpreter::visit_VarAccessNode(const VarAccessNode& node, const Conte
   //   return res.success(val);
   // }, value.value());
 
-  std::cout << "[var_access_node]: memory of context: " << &context << '\n';
-
   return std::visit([&](const auto& val) -> RTResult {
     using T = std::decay_t<decltype(val)>;
 
@@ -155,7 +153,7 @@ RTResult Interpreter::visit_VarAccessNode(const VarAccessNode& node, const Conte
   }, value.value());
 }
 
-RTResult Interpreter::visit_VarAssignNode(const VarAssignNode& node, const Context& context) {
+RTResult Interpreter::visit_VarAssignNode(const VarAssignNode& node, Context& context) {
   RTResult res;
 
   TokenValue tok_val = node.var_name_tok.value.value();
@@ -168,17 +166,11 @@ RTResult Interpreter::visit_VarAssignNode(const VarAssignNode& node, const Conte
 
   // std::cout << "setting " << var_name << " to value " << value.get_value();
 
-  std::cout << "[var_assign_node]: memory of context: " << &context << '\n';
-
-  std::visit([&](const auto& val) -> void {
-    std::cout << "setting " << var_name << " to value " << val;
-  }, value.get_value());
-
   context.symbol_table->set(var_name, std::get<double>(value.get_value()));
   return res.success(value);
 }
 
-RTResult Interpreter::visit_NumberNode(const NumberNode& node, const Context& context) {
+RTResult Interpreter::visit_NumberNode(const NumberNode& node, Context& context) {
   Token node_value = node.tok.value();
   TokenValue value = node_value.value.value();
 
@@ -199,7 +191,7 @@ RTResult Interpreter::visit_NumberNode(const NumberNode& node, const Context& co
   }
 }
 
-RTResult Interpreter::visit_BinOpNode(const BinOpNode& node, const Context& context) {
+RTResult Interpreter::visit_BinOpNode(const BinOpNode& node, Context& context) {
   RTResult res;
   Number left = res.register_(visit(node.left_node, context));
   if(res.error) return res;
@@ -251,7 +243,7 @@ RTResult Interpreter::visit_BinOpNode(const BinOpNode& node, const Context& cont
   return res.success(result_pos);
 }
 
-RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node, const Context& context) {
+RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node, Context& context) {
   RTResult res;
   Number number = res.register_(visit(node.node, context));
   if(res.error) return res;

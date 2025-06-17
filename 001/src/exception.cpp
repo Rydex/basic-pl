@@ -126,7 +126,7 @@ std::string string_with_arrows(
     result += line + '\n';
     // adds carets under problematic range
     // spaces pad up to col_start, caret spans from col_start to col_end
-    result += std::string(col_start, ' ') + std::string(std::max(1, col_end - col_start), '^');
+    result += std::string(col_start, ' ') + std::string(std::max(1, (col_end - col_start) + 1), '^');
 
     // updat line indices
     // moves idx_start to idx_end which is next line

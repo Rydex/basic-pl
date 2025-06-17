@@ -1,13 +1,12 @@
 #include "symbol_table.h"
+#include <optional>
 
 std::optional<TokenValue> SymbolTable::get(const std::string& name) const {
-  std::optional<TokenValue> value;
+  std::optional<TokenValue> value = std::nullopt;
 
-  decltype(symbols)::const_iterator it = symbols.find(name);
-
-  if(it != symbols.end()) {
-    value = it->second;
-  } else {
+  try {
+    value = symbols.at(name);
+  } catch (const std::out_of_range&) {
     value = std::nullopt;
   }
 
@@ -23,5 +22,7 @@ void SymbolTable::remove(const std::string& name) {
 }
 
 void SymbolTable::set(const std::string& name, const TokenValue& value) {
-  symbols[name] = value;
+  std::visit([&](const auto& val) -> void { symbols[name] = val; }, value);
+
+  //symbols[name] = value;
 }

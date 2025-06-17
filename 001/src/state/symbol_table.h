@@ -10,8 +10,8 @@
 
 class SymbolTable {
 private:
-  std::unordered_map<std::string, TokenValue> symbols{};
   std::shared_ptr<SymbolTable> parent = nullptr;
+  std::unordered_map<std::string, TokenValue> symbols{};
 public:
   std::optional<TokenValue> get(const std::string& name) const;
 

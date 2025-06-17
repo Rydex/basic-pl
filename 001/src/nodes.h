@@ -46,6 +46,9 @@ struct VarAccessNode {
 struct VarAssignNode {
   Token var_name_tok;
   NodeVariant value_node;
+
+  Position pos_start = var_name_tok.pos_start.value();
+  Position pos_end = var_name_tok.pos_end.value();
 };
 
 
