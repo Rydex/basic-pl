@@ -112,7 +112,8 @@ Token Lexer::make_identifier() {
 
 RunType run(const std::string& fn, const std::string& text) {
   SymbolTable global;
-  global.set("null", 0);
+  global.set("null", -1);
+  global.set("quit", 0);
 
   Lexer lexer(fn, text);
 
@@ -125,7 +126,7 @@ RunType run(const std::string& fn, const std::string& text) {
   if(ast.error) return { std::nullopt, ast.error };
 
   Context context("<module>");
-  context.symbol_table = global;
+  context.symbol_table = std::make_shared<SymbolTable>(global);
 
   Interpreter interpreter;
   RTResult result = interpreter.visit(ast.node.value(), context);

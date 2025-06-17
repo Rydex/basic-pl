@@ -54,12 +54,12 @@ public:
 
 class Interpreter {
 public:
-  RTResult visit(const NodeVariant& node, Context& context);
-  RTResult visit_NumberNode(const NumberNode& node, Context& context);
-  RTResult visit_BinOpNode(const BinOpNode& node, Context& context);
-  RTResult visit_UnaryOpNode(const UnaryOpNode& node, Context& context);
-  RTResult visit_VarAccessNode(const VarAccessNode& node, Context& context);
-  RTResult visit_VarAssignNode(VarAssignNode& node, Context& context);
+  RTResult visit(const NodeVariant& node, const Context& context);
+  RTResult visit_NumberNode(const NumberNode& node, const Context& context);
+  RTResult visit_BinOpNode(const BinOpNode& node, const Context& context);
+  RTResult visit_UnaryOpNode(const UnaryOpNode& node, const Context& context);
+  RTResult visit_VarAccessNode(const VarAccessNode& node, const Context& context);
+  RTResult visit_VarAssignNode(const VarAssignNode& node, const Context& context);
 };
 
 

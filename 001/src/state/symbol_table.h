@@ -10,14 +10,14 @@
 
 class SymbolTable {
 private:
-	std::unordered_map<std::string, TokenValue> symbols{};
-	std::shared_ptr<SymbolTable> parent = nullptr;
+  std::unordered_map<std::string, TokenValue> symbols{};
+  std::shared_ptr<SymbolTable> parent = nullptr;
 public:
-	std::optional<TokenValue> get(const std::string& name) const;
+  std::optional<TokenValue> get(const std::string& name) const;
 
-	void remove(const std::string& name);
+  void remove(const std::string& name);
 
-	void set(const std::string& name, const TokenValue& value);
+  void set(const std::string& name, const TokenValue& value);
 };
 
 #endif
