@@ -129,7 +129,7 @@ RunType run(const std::string& fn, const std::string& text) {
   context.symbol_table = std::make_shared<SymbolTable>(global);
 
   Interpreter interpreter;
-  RTResult result = interpreter.visit(ast.node.value(), context);
+  RTResult result = interpreter.visit(ast.node, context);
 
   if(result.error) {
     return { std::nullopt, result.error };

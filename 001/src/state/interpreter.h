@@ -55,12 +55,12 @@ public:
 
 class Interpreter {
 public:
-  RTResult visit(const std::shared_ptr<ASTNode>& node, Context& context);
-  RTResult visit_NumberNode(const NumberNode& node, Context& context);
-  RTResult visit_BinOpNode(const BinOpNode& node, Context& context);
-  RTResult visit_UnaryOpNode(const UnaryOpNode& node, Context& context);
-  RTResult visit_VarAccessNode(const VarAccessNode& node, Context& context);
-  RTResult visit_VarAssignNode(const VarAssignNode& node, Context& context);
+  RTResult visit(const std::shared_ptr<ASTNode>& node, Context& context) const;
+  RTResult visit_NumberNode(const NumberNode& node, Context& context) const;
+  RTResult visit_BinOpNode(const BinOpNode& node, Context& context) const;
+  RTResult visit_UnaryOpNode(const UnaryOpNode& node, Context& context) const;
+  RTResult visit_VarAccessNode(const VarAccessNode& node, Context& context) const;
+  RTResult visit_VarAssignNode(const VarAssignNode& node, Context& context) const;
 };
 
 

@@ -21,7 +21,7 @@ using SharedUnary = std::shared_ptr<UnaryOpNode>;
 using SharedAssign = std::shared_ptr<VarAssignNode>;
 
 struct ASTNode {
-  virtual RTResult accept(const Interpreter& visitor, const Context& context) = 0;
+  virtual RTResult accept(const Interpreter& visitor, Context& context) = 0;
   virtual ~ASTNode() {}
 };
 
@@ -33,7 +33,7 @@ struct NumberNode : public ASTNode {
   NumberNode(const Token& token)
   : tok(token), pos_start(token.pos_start.value()), pos_end(token.pos_end.value()) {};
 
-  RTResult accept(const Interpreter& visitor, const Context& context) override ;
+  RTResult accept(const Interpreter& visitor, Context& context) override ;
 };
 
 struct VarAccessNode : public ASTNode {
@@ -42,7 +42,7 @@ struct VarAccessNode : public ASTNode {
   Position pos_start = var_name_tok.pos_start.value();
   Position pos_end = var_name_tok.pos_end.value();
 
-  RTResult accept(const Interpreter& visitor, const Context& context) override;
+  RTResult accept(const Interpreter& visitor, Context& context) override;
 };
 
 struct VarAssignNode : public ASTNode {
@@ -52,7 +52,7 @@ struct VarAssignNode : public ASTNode {
   Position pos_start = var_name_tok.pos_start.value();
   Position pos_end = var_name_tok.pos_end.value();
 
-  RTResult accept(const Interpreter& visitor, const Context& context) override;
+  RTResult accept(const Interpreter& visitor, Context& context) override;
 };
 
 
@@ -63,12 +63,12 @@ struct BinOpNode : public ASTNode {
   std::optional<Position> pos_start, pos_end;
   
   BinOpNode(
-    const ASTNode& left_node,
+    const std::shared_ptr<ASTNode>& left_node,
     const Token& op_tok,
-    const ASTNode& right_node
+    const std::shared_ptr<ASTNode>& right_node
   );
 
-  RTResult accept(const Interpreter& visitor, const Context& context) override;
+  RTResult accept(const Interpreter& visitor, Context& context) override;
 };
 
 struct UnaryOpNode : public ASTNode {
@@ -78,10 +78,10 @@ struct UnaryOpNode : public ASTNode {
 
   UnaryOpNode(
     const Token& op_tok,
-    const ASTNode& node
+    const std::shared_ptr<ASTNode>& node
   );
 
-  RTResult accept(const Interpreter& visitor, const Context& context) override;
+  RTResult accept(const Interpreter& visitor, Context& context) override;
 };
 
 #endif

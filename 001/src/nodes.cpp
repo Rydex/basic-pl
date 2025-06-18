@@ -2,26 +2,27 @@
 #include "context.h"
 #include "state/interpreter.h"
 #include <memory>
+#include "parser.h"
 
 // visitors
 
-RTResult VarAccessNode::accept(const Interpreter& visitor, const Context& context) {
+RTResult VarAccessNode::accept(const Interpreter& visitor, Context& context) {
   return visitor.visit_VarAccessNode(*this, context);
 }
 
-RTResult VarAssignNode::accept(const Interpreter& visitor, const Context& context) {
+RTResult VarAssignNode::accept(const Interpreter& visitor, Context& context) {
   return visitor.visit_VarAssignNode(*this, context);
 }
 
-RTResult BinOpNode::accept(const Interpreter& visitor, const Context& context) {
+RTResult BinOpNode::accept(const Interpreter& visitor, Context& context) {
   return visitor.visit_BinOpNode(*this, context);
 }
 
-RTResult UnaryOpNode::accept(const Interpreter& visitor, const Context& context) {
+RTResult UnaryOpNode::accept(const Interpreter& visitor, Context& context) {
   return visitor.visit_UnaryOpNode(*this, context);
 }
 
-RTResult NumberNode::accept(const Interpreter& visitor, const Context& context) {
+RTResult NumberNode::accept(const Interpreter& visitor, Context& context) {
   return visitor.visit_NumberNode(*this, context);
 }
 
@@ -29,19 +30,19 @@ RTResult NumberNode::accept(const Interpreter& visitor, const Context& context) 
 
 UnaryOpNode::UnaryOpNode(
   const Token& op_tok,
-  const ASTNode& node
-): op_tok(op_tok), node(std::make_shared<UnaryOpNode>(node)) {
+  const std::shared_ptr<ASTNode>& node
+): op_tok(op_tok), node(node) {
   pos_end = get_pos_end(node);
 }
 
 BinOpNode::BinOpNode(
-  const ASTNode& left_node,
+  const std::shared_ptr<ASTNode>& left_node,
   const Token& op_tok,
-  const ASTNode& right_node
+  const std::shared_ptr<ASTNode>& right_node
 ): 
-  left_node(std::make_shared<BinOpNode>(left_node)),
+  left_node(left_node),
   op_tok(op_tok), 
-  right_node(std::make_shared<BinOpNode>(right_node)) {
+  right_node(right_node) {
   pos_start = get_pos_start(left_node);
   pos_end = get_pos_end(right_node);
 }
