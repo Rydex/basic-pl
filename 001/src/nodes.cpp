@@ -30,21 +30,18 @@ RTResult NumberNode::accept(const Interpreter& visitor, const Context& context) 
 UnaryOpNode::UnaryOpNode(
   const Token& op_tok,
   const ASTNode& node
-): op_tok(op_tok), node(std::make_shared<ASTNode>(node)) {
+): op_tok(op_tok), node(std::make_shared<UnaryOpNode>(node)) {
   pos_end = get_pos_end(node);
 }
-
-NumberNode::NumberNode(const Token& token)
-  : tok(token), pos_start(token.pos_start.value()), pos_end(token.pos_end.value()) {}
 
 BinOpNode::BinOpNode(
   const ASTNode& left_node,
   const Token& op_tok,
   const ASTNode& right_node
 ): 
-  left_node(std::make_shared<ASTNode>(left_node)),
+  left_node(std::make_shared<BinOpNode>(left_node)),
   op_tok(op_tok), 
-  right_node(std::make_shared<ASTNode>(right_node)) {
+  right_node(std::make_shared<BinOpNode>(right_node)) {
   pos_start = get_pos_start(left_node);
   pos_end = get_pos_end(right_node);
 }

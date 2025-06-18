@@ -14,10 +14,6 @@ RegisterVariant ParseResult::register_(const RegisterVariant& res) {
 
     if constexpr (std::is_same_v<T, ParseResult>) {
       if(val.error) this->error = val.error;
-
-      return std::visit([](const auto& inner_node) -> RegisterVariant {
-        return inner_node;
-      }, val.node.value());
     }
     
     return val;
@@ -26,7 +22,7 @@ RegisterVariant ParseResult::register_(const RegisterVariant& res) {
   return res;
 }
 
-ParseResult& ParseResult::success(const NodeVariant& node) {
+ParseResult& ParseResult::success(const std::shared_ptr<ASTNode>& node) {
   this->node = node;
   return *this;
 }
@@ -76,11 +72,11 @@ ParseResult Parser::atom() {
 
   if(tok.type == INT_T || tok.type == FLT_T) {
     res.register_(advance());
-    return res.success(NumberNode(tok));
+    return res.success(std::make_shared<NumberNode>(tok));
 
   } else if(tok.type == ID_T) {
     res.register_(advance());
-    return res.success(VarAccessNode{tok});
+    return res.success(std::make_shared<VarAccessNode>(tok));
 
   } else if(tok.type == LPR_T) {
     res.register_(advance());
@@ -90,7 +86,7 @@ ParseResult Parser::atom() {
 
     if(cur_tok->type == RPR_T) {
       res.register_(advance());
-      return res.success(expr_res.node.value());
+      return res.success(expr_res.node);
     } else {
       return res.failure(std::make_shared<InvalidSyntaxException>(InvalidSyntaxException(
               cur_tok->pos_start.value(), cur_tok->pos_end.value(),
@@ -115,7 +111,7 @@ ParseResult Parser::factor() {
 
     if(factor_res.error) return factor_res;
 
-    return res.success(std::make_shared<UnaryOpNode>(tok, factor_res.node.value()));
+    return res.success(std::make_shared<UnaryOpNode>(tok, factor_res.node));
   }
 
   return power();
@@ -155,7 +151,7 @@ ParseResult Parser::expr() {
     if(res.error) return res;
 
     // return res.success(VarAssignNode(var_name, other_expr));
-    return res.success(std::make_shared<VarAssignNode>(var_name, other_expr.node.value()));
+    return res.success(std::make_shared<VarAssignNode>(var_name, other_expr.node));
   }
 
   return bin_op([this]() { return term(); }, { PLS_T, MIN_T });
@@ -172,7 +168,7 @@ ParseResult Parser::bin_op(
   ParseResult left_res = func_a(); // parseresult extracted from func_a()
 
   if(left_res.error) return left_res; // check if theres an error and if yes, return early
-  NodeVariant left = left_res.node.value(); // extract node from left_res
+  std::shared_ptr<ASTNode> left = left_res.node; // extract node from left_res
 
    while(cur_tok && std::find(ops.begin(), ops.end(), cur_tok->type)!=ops.end()) { // check while cur_tok exists and
       // the type is in the vector
@@ -182,7 +178,7 @@ ParseResult Parser::bin_op(
 
       if(right_res.error) return right_res; // if theres an error return early
 
-      NodeVariant right = right_res.node.value(); // extract node from right_res
+      std::shared_ptr<ASTNode> right = right_res.node; // extract node from right_res
 
       left = std::make_shared<BinOpNode>(left, op_tok, right); // finally, make
       // a shared binopnode pointer consisting of the 3 elements

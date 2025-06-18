@@ -50,9 +50,9 @@ using RegisterVariant = std::variant<
 class ParseResult {
 public:
   std::shared_ptr<Exception> error = nullptr;
-  std::optional<ASTNode> node = std::nullopt;
+  std::shared_ptr<ASTNode> node = nullptr;
   RegisterVariant register_(const RegisterVariant& res);
-  ParseResult& success(const ASTNode& node);
+  ParseResult& success(const std::shared_ptr<ASTNode>& node);
   ParseResult& failure(const std::shared_ptr<Exception>& error);
 };
 
