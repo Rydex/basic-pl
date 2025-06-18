@@ -1,20 +1,10 @@
 #ifndef NODES
 #define NODES
-
+#include "state/interpreter.h"
 #include "token.h"
 #include <variant>
 #include <optional>
 #include <memory>
-
-struct NumberNode {
-  std::optional<Token> tok;
-  Position pos_start = tok->pos_start.value();
-  Position pos_end = tok->pos_end.value();
-
-  NumberNode(const Token& token);
-
-  std::string as_string() const;
-};
 
 struct BinOpNode;
 struct UnaryOpNode;
@@ -26,58 +16,67 @@ using SharedBin = std::shared_ptr<BinOpNode>;
 using SharedUnary = std::shared_ptr<UnaryOpNode>;
 using SharedAssign = std::shared_ptr<VarAssignNode>;
 
-using NodeVariant = std::variant<
-  NumberNode,
-  SharedUnary,
-  SharedBin,
-  SharedAssign,
-  VarAccessNode
->;
+struct ASTNode {
+  virtual RTResult accept(const Interpreter& visitor, const Context& context) = 0;
+  virtual ~ASTNode() {}
+};
 
-std::string stringify_node(const NodeVariant& node);
+struct NumberNode : public ASTNode {
+  std::optional<Token> tok;
+  Position pos_start = tok->pos_start.value();
+  Position pos_end = tok->pos_end.value();
 
-struct VarAccessNode {
+  NumberNode(const Token& token);
+
+  RTResult accept(const Interpreter& visitor, const Context& context);
+};
+
+struct VarAccessNode : public ASTNode {
   Token var_name_tok;
 
   Position pos_start = var_name_tok.pos_start.value();
   Position pos_end = var_name_tok.pos_end.value();
+
+  RTResult accept(const Interpreter& visitor, const Context& context);
 };
 
 struct VarAssignNode {
   Token var_name_tok;
-  NodeVariant value_node;
+  std::shared_ptr<ASTNode> value_node;
 
   Position pos_start = var_name_tok.pos_start.value();
   Position pos_end = var_name_tok.pos_end.value();
+
+  RTResult accept(const Interpreter& visitor, const Context& context);
 };
 
 
 struct BinOpNode {
-  NodeVariant left_node;
+  std::shared_ptr<ASTNode> left_node;
   Token op_tok;
-  NodeVariant right_node;
+  std::shared_ptr<ASTNode> right_node;
   std::optional<Position> pos_start, pos_end;
   
   BinOpNode(
-    const NodeVariant& left_node,
+    const ASTNode& left_node,
     const Token& op_tok,
-    const NodeVariant& right_node
+    const ASTNode& right_node
   );
 
-  std::string as_string() const;
+  RTResult accept(const Interpreter& visitor, const Context& context);
 };
 
 struct UnaryOpNode {
   Token op_tok;
-  NodeVariant node;
+  std::shared_ptr<ASTNode> node;
   std::optional<Position> pos_start = op_tok.pos_start.value(), pos_end;
 
   UnaryOpNode(
     const Token& op_tok,
-    const NodeVariant& node
+    const ASTNode& node
   );
 
-  std::string as_string() const;
+  RTResult accept(const Interpreter& visitor, const Context& context);
 };
 
 #endif

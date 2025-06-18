@@ -50,14 +50,14 @@ using RegisterVariant = std::variant<
 class ParseResult {
 public:
   std::shared_ptr<Exception> error = nullptr;
-  std::optional<NodeVariant> node = std::nullopt;
+  std::optional<ASTNode> node = std::nullopt;
   RegisterVariant register_(const RegisterVariant& res);
-  ParseResult& success(const NodeVariant& node);
+  ParseResult& success(const ASTNode& node);
   ParseResult& failure(const std::shared_ptr<Exception>& error);
 };
 
-Position get_pos_end(const NodeVariant& node);
-Position get_pos_start(const NodeVariant& node);
+Position get_pos_end(const ASTNode& node);
+Position get_pos_start(const ASTNode& node);
 
 // end parser
 
