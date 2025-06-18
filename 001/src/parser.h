@@ -56,8 +56,8 @@ public:
   ParseResult& failure(const std::shared_ptr<Exception>& error);
 };
 
-Position get_pos_end(const ASTNode& node);
-Position get_pos_start(const ASTNode& node);
+Position get_pos_end(const std::shared_ptr<ASTNode>& node);
+Position get_pos_start(const std::shared_ptr<ASTNode>& node);
 
 // end parser
 

@@ -2,8 +2,9 @@
 #define INTERPRETER
 
 #include "../context.h"
-#include "../parser.h"
+#include "../nodes.h"
 #include "../position.h"
+#include "../exception.h"
 #include <functional>
 
 class Number;
@@ -54,7 +55,7 @@ public:
 
 class Interpreter {
 public:
-  RTResult visit(const NodeVariant& node, Context& context);
+  RTResult visit(const std::shared_ptr<ASTNode>& node, Context& context);
   RTResult visit_NumberNode(const NumberNode& node, Context& context);
   RTResult visit_BinOpNode(const BinOpNode& node, Context& context);
   RTResult visit_UnaryOpNode(const UnaryOpNode& node, Context& context);

@@ -101,24 +101,8 @@ std::string Number::as_string() const {
   return oss.str();
 }
 
-RTResult Interpreter::visit(const NodeVariant& node, Context& context) {
-  return std::visit([&](const auto& val) -> RTResult {
-    using T = std::decay_t<decltype(val)>;
-
-    if constexpr (std::is_same_v<T, NumberNode>) {
-      return visit_NumberNode(val, context);
-    } else if constexpr (std::is_same_v<T, SharedBin>) {
-      return visit_BinOpNode(*val, context);
-    } else if constexpr (std::is_same_v<T, SharedUnary>) {
-      return visit_UnaryOpNode(*val, context);
-    } else if constexpr (std::is_same_v<T, SharedAssign>) {
-      return visit_VarAssignNode(*val, context);
-    } else if constexpr (std::is_same_v<T, VarAccessNode>) {
-      return visit_VarAccessNode(val, context);
-    }
-
-    throw std::runtime_error("no visit method defined");
-  }, node);
+RTResult Interpreter::visit(const std::shared_ptr<ASTNode>& node, Context& context) {
+  return node->accept(*this, context);
 }
 
 RTResult Interpreter::visit_VarAccessNode(const VarAccessNode& node, Context& context) {

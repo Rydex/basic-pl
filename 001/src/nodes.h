@@ -1,6 +1,6 @@
 #ifndef NODES
 #define NODES
-#include "state/interpreter.h"
+#include "position.h"
 #include "token.h"
 #include <variant>
 #include <optional>
@@ -10,6 +10,10 @@ struct BinOpNode;
 struct UnaryOpNode;
 struct VarAssignNode;
 struct VarAccessNode;
+
+class RTResult;
+class Interpreter;
+class Context;
 
 // helpers
 using SharedBin = std::shared_ptr<BinOpNode>;
