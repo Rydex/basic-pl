@@ -38,22 +38,21 @@ public:
 };
 
 using RegisterVariant = std::variant<
-  ParseResult,
-  NumberNode,
-  SharedBin,
-  Token,
-  SharedUnary,
-  SharedAssign,
-  VarAccessNode
+  std::shared_ptr<ASTNode>,
+  ParseResult
 >;
 
 class ParseResult {
 public:
+  int advance_count = 0;
+
   std::shared_ptr<Exception> error = nullptr;
   std::shared_ptr<ASTNode> node = nullptr;
-  RegisterVariant register_(const RegisterVariant& res);
+  RegisterVariant register_(const ParseResult& res);
+  void register_advance();
   ParseResult& success(const std::shared_ptr<ASTNode>& node);
   ParseResult& failure(const std::shared_ptr<Exception>& error);
+
 };
 
 Position get_pos_end(const std::shared_ptr<ASTNode>& node);

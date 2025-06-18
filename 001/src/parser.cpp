@@ -7,18 +7,14 @@
 
 // parse result
 
-RegisterVariant ParseResult::register_(const RegisterVariant& res) {
-  std::visit([this](const auto& val) -> RegisterVariant {
-    using T = std::decay_t<decltype(val)>;
+void ParseResult::register_advance() {
+  advance_count++;
+}
 
-    if constexpr (std::is_same_v<T, ParseResult>) {
-      if(val.error) this->error = val.error;
-    }
-    
-    return val;
-  }, res);
-
-  return res;
+RegisterVariant ParseResult::register_(const ParseResult& res) {
+  this->advance_count += res.advance_count;
+  if(res.error) this->error = res.error;
+  return res.node;
 }
 
 ParseResult& ParseResult::success(const std::shared_ptr<ASTNode>& node) {
@@ -27,7 +23,8 @@ ParseResult& ParseResult::success(const std::shared_ptr<ASTNode>& node) {
 }
 
 ParseResult& ParseResult::failure(const std::shared_ptr<Exception>& error) {
-  this->error = error;
+  if(!this->error || advance_count == 0)
+    this->error = error;
   return *this;
 }
 
@@ -70,21 +67,25 @@ ParseResult Parser::atom() {
   Token tok = cur_tok.value();
 
   if(tok.type == INT_T || tok.type == FLT_T) {
-    res.register_(advance());
+    res.register_advance();
+    advance();
     return res.success(std::make_shared<NumberNode>(tok));
 
   } else if(tok.type == ID_T) {
-    res.register_(advance());
+    res.register_advance();
+    advance();
     return res.success(std::make_shared<VarAccessNode>(tok));
 
   } else if(tok.type == LPR_T) {
-    res.register_(advance());
+    res.register_advance();
+    advance();
     ParseResult expr_res = expr();
 
     if(expr_res.error) return expr_res;
 
     if(cur_tok->type == RPR_T) {
-      res.register_(advance());
+      res.register_advance();
+    advance();
       return res.success(expr_res.node);
     } else {
       return res.failure(std::make_shared<InvalidSyntaxException>(InvalidSyntaxException(
@@ -96,7 +97,7 @@ ParseResult Parser::atom() {
 
   return res.failure(std::make_shared<InvalidSyntaxException>(InvalidSyntaxException(
       tok.pos_start.value(), tok.pos_end.value(),
-      "expected int, float, '+', '-' or '('"
+      "expected int, float, identifier, '+', '-' or '('"
   )));
 }
 
@@ -105,7 +106,8 @@ ParseResult Parser::factor() {
   Token tok = cur_tok.value();
 
   if(tok.type == PLS_T || tok.type == MIN_T) {
-    res.register_(advance());
+    res.register_advance();
+    advance();
     ParseResult factor_res = factor();
 
     if(factor_res.error) return factor_res;
@@ -124,7 +126,8 @@ ParseResult Parser::expr() {
   ParseResult res;
 
   if(cur_tok->matches(KWD_T, "VAR")) {
-    res.register_(advance());
+    res.register_advance();
+    advance();
 
     if(cur_tok->type != ID_T) {
       return res.failure(std::make_shared<InvalidSyntaxException>(InvalidSyntaxException(
@@ -134,7 +137,8 @@ ParseResult Parser::expr() {
     }
 
     Token var_name = cur_tok.value();
-    res.register_(advance());
+    res.register_advance();
+    advance();
 
     if(cur_tok->type != EQU_T) {
       return res.failure(std::make_shared<InvalidSyntaxException>(InvalidSyntaxException(
@@ -143,7 +147,8 @@ ParseResult Parser::expr() {
       )));
     }
 
-    res.register_(advance());
+    res.register_advance();
+    advance();
     ParseResult other_expr = expr();
     res.register_(other_expr);
 
@@ -153,7 +158,23 @@ ParseResult Parser::expr() {
     return res.success(std::make_shared<VarAssignNode>(var_name, other_expr.node));
   }
 
-  return bin_op([this]() { return term(); }, { PLS_T, MIN_T });
+  RegisterVariant node_expr = res.register_(bin_op([this]() { return term(); }, { PLS_T, MIN_T }));
+
+  ParseResult node;
+
+  if(std::holds_alternative<ParseResult>(node_expr)) {
+    node = std::get<ParseResult>(node_expr);
+  } else {
+    node.node = std::get<std::shared_ptr<ASTNode>>(node_expr);
+  }
+
+  if(res.error)
+    return res.failure(std::make_shared<InvalidSyntaxException>(InvalidSyntaxException(
+      cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+      "expected 'VAR', int, float, identifier, '+', '-' or '('"
+    )));
+
+  return res.success(node.node);
 }
 
 ParseResult Parser::bin_op(
@@ -172,7 +193,8 @@ ParseResult Parser::bin_op(
    while(cur_tok && std::find(ops.begin(), ops.end(), cur_tok->type)!=ops.end()) { // check while cur_tok exists and
       // the type is in the vector
       Token op_tok = cur_tok.value(); // get operator token which is just current token
-      res.register_(advance()); // advance
+      res.register_advance();
+    advance(); // advance
       ParseResult right_res = other_func(); // parseresult extracted from func()
 
       if(right_res.error) return right_res; // if theres an error return early
