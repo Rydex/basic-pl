@@ -3,6 +3,7 @@
 #include "src/lexer.h"
 #include "src/state/symbol_table.h"
 
+
 auto handle_number = [](const auto& inner) -> void {
   if constexpr (std::is_same_v<std::decay_t<decltype(inner)>, double>) {
     std::ostringstream oss;
@@ -11,10 +12,20 @@ auto handle_number = [](const auto& inner) -> void {
   }
 };
 
+auto handle_nodes = [](const auto& val) -> void {
+  using T = std::decay_t<decltype(val)>;
+
+  if constexpr (std::is_same_v<T, std::string>) {
+    std::cout << val << '\n';
+  } else if constexpr (std::is_same_v<T, Number>) {
+    std::visit(handle_number, val.get_value());
+  }
+};
+
 int main() {
   std::string input;
   std::shared_ptr<SymbolTable> symbols = std::make_shared<SymbolTable>();
-  
+
   do {
     std::cout << "program (type quit to quit) > ";
     std::getline(std::cin, input);
@@ -24,16 +35,7 @@ int main() {
       std::cout << error->as_string() << '\n'; 
     } else {
 
-      std::visit([&](const auto& val) -> void {
-        using T = std::decay_t<decltype(val)>;
-        
-        if constexpr (std::is_same_v<T, std::string>) {
-          std::cout << val << '\n';
-
-        } else if constexpr (std::is_same_v<T, Number>) {
-          std::visit(handle_number, val.get_value());
-        }
-      }, ast.value());
+      std::visit(handle_nodes, ast.value());
     }
   } while (input != "quit");
 }

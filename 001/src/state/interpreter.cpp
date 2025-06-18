@@ -153,6 +153,14 @@ RTResult Interpreter::visit_VarAssignNode(const VarAssignNode& node, Context& co
 
   if(res.error) return res;
 
+  if(var_name == "null" || var_name == "quit") {
+    return res.failure(std::make_shared<RTException>(RTException(
+      context,
+      node.pos_start, node.pos_end,
+      "cannot reassign built-in variable " + var_name
+    )));
+  }
+
   // std::cout << "setting " << var_name << " to value " << value.get_value();
 
   context.symbol_table->set(var_name, std::get<double>(value.get_value()));
