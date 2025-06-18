@@ -45,6 +45,7 @@ std::string Token::as_string() const {
 
 bool Token::matches(const std::string& type, const TokenValue& val) {
   // return this->type == type && this->value.value() == value;
+  if(!this->value) return false;
 
   return std::visit([&](const auto& lhs, const auto& rhs) -> bool {
     using L = std::decay_t<decltype(lhs)>;
