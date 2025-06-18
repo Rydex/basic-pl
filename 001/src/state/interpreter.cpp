@@ -101,11 +101,11 @@ std::string Number::as_string() const {
   return oss.str();
 }
 
-RTResult Interpreter::visit(const std::shared_ptr<ASTNode>& node, Context& context) {
+RTResult Interpreter::visit(const std::shared_ptr<ASTNode>& node, Context& context) const {
   return node->accept(*this, context);
 }
 
-RTResult Interpreter::visit_VarAccessNode(const VarAccessNode& node, Context& context) {
+RTResult Interpreter::visit_VarAccessNode(const VarAccessNode& node, Context& context) const {
   RTResult res;
   std::string var_name = std::get<std::string>(node.var_name_tok.value.value());
 
@@ -137,7 +137,7 @@ RTResult Interpreter::visit_VarAccessNode(const VarAccessNode& node, Context& co
   }, value.value());
 }
 
-RTResult Interpreter::visit_VarAssignNode(const VarAssignNode& node, Context& context) {
+RTResult Interpreter::visit_VarAssignNode(const VarAssignNode& node, Context& context) const {
   RTResult res;
 
   TokenValue tok_val = node.var_name_tok.value.value();
@@ -154,7 +154,7 @@ RTResult Interpreter::visit_VarAssignNode(const VarAssignNode& node, Context& co
   return res.success(value);
 }
 
-RTResult Interpreter::visit_NumberNode(const NumberNode& node, Context& context) {
+RTResult Interpreter::visit_NumberNode(const NumberNode& node, Context& context) const {
   Token node_value = node.tok.value();
   TokenValue value = node_value.value.value();
 
@@ -175,7 +175,7 @@ RTResult Interpreter::visit_NumberNode(const NumberNode& node, Context& context)
   }
 }
 
-RTResult Interpreter::visit_BinOpNode(const BinOpNode& node, Context& context) {
+RTResult Interpreter::visit_BinOpNode(const BinOpNode& node, Context& context) const {
   RTResult res;
   Number left = res.register_(visit(node.left_node, context));
   if(res.error) return res;
@@ -227,7 +227,7 @@ RTResult Interpreter::visit_BinOpNode(const BinOpNode& node, Context& context) {
   return res.success(result_pos);
 }
 
-RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node, Context& context) {
+RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node, Context& context) const {
   RTResult res;
   Number number = res.register_(visit(node.node, context));
   if(res.error) return res;

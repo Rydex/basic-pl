@@ -42,6 +42,8 @@ struct VarAccessNode : public ASTNode {
   Position pos_start = var_name_tok.pos_start.value();
   Position pos_end = var_name_tok.pos_end.value();
 
+  VarAccessNode(const Token& token): var_name_tok(token) {}
+
   RTResult accept(const Interpreter& visitor, Context& context) override;
 };
 
@@ -51,6 +53,9 @@ struct VarAssignNode : public ASTNode {
 
   Position pos_start = var_name_tok.pos_start.value();
   Position pos_end = var_name_tok.pos_end.value();
+
+  VarAssignNode(const Token& tok, const std::shared_ptr<ASTNode>& node)
+    : var_name_tok(tok), value_node(node) {}
 
   RTResult accept(const Interpreter& visitor, Context& context) override;
 };
