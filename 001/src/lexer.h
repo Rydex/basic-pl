@@ -6,6 +6,7 @@
 #include <utility>
 #include "exception.h"
 #include "state/interpreter.h"
+#include "state/symbol_table.h"
 #include "token.h"
 #include "position.h"
 #include "parser.h"
@@ -50,6 +51,6 @@ public:
 
 using RunType = std::pair<std::optional<RTVariant>, std::shared_ptr<Exception>>;
 
-RunType run(const std::string& fn, const std::string& text);
+RunType run(const std::string& fn, const std::string& text, const std::shared_ptr<SymbolTable>& table);
 
 #endif

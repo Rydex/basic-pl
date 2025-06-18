@@ -108,8 +108,13 @@ RTResult Interpreter::visit(const std::shared_ptr<ASTNode>& node, Context& conte
 RTResult Interpreter::visit_VarAccessNode(const VarAccessNode& node, Context& context) const {
   RTResult res;
   std::string var_name = std::get<std::string>(node.var_name_tok.value.value());
+  std::optional<TokenValue> value;
 
-  std::optional<TokenValue> value = context.symbol_table->get(var_name);
+  try {
+    value = context.symbol_table->get(var_name).value();
+  } catch (std::bad_optional_access&) {
+    value = std::nullopt;
+  }
 
   if(!value) {
     return res.failure(std::make_shared<RTException>(RTException(

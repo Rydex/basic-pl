@@ -22,7 +22,5 @@ void SymbolTable::remove(const std::string& name) {
 }
 
 void SymbolTable::set(const std::string& name, const TokenValue& value) {
-  std::visit([&](const auto& val) -> void { symbols[name] = val; }, value);
-
-  //symbols[name] = value;
+  symbols[name] = value;
 }
