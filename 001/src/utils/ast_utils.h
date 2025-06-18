@@ -12,4 +12,3 @@
 // Position get_pos_start(const NodeVariant& node);
 
 // #endif
-// test
