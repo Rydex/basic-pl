@@ -43,7 +43,7 @@ std::string Token::as_string() const {
   }, value.value());
 }
 
-bool Token::matches(const std::string& type, const TokenValue& value) {
+bool Token::matches(const std::string& type, const TokenValue& val) {
   // return this->type == type && this->value.value() == value;
 
   return std::visit([&](const auto& lhs, const auto& rhs) -> bool {
@@ -55,5 +55,5 @@ bool Token::matches(const std::string& type, const TokenValue& value) {
     } else {
       return false;
     }
-  }, this->value.value(), value);
+  }, this->value.value(), val);
 }
