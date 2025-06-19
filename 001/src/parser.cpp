@@ -203,35 +203,11 @@ ParseResult Parser::bin_op(
 }
 
 Position get_pos_end(const std::shared_ptr<ASTNode>& node) {
-  if(auto number = std::dynamic_pointer_cast<NumberNode>(node)) {
-    return number->pos_end;
-  } else if(auto var_access = std::dynamic_pointer_cast<VarAccessNode>(node)) {
-    return var_access->pos_end;
-  } else if(auto bin_op = std::dynamic_pointer_cast<BinOpNode>(node)) {
-    return bin_op->pos_end.value();
-  } else if(auto var_assign = std::dynamic_pointer_cast<VarAssignNode>(node)) {
-    return var_assign->pos_end;
-  } else if(auto unary = std::dynamic_pointer_cast<UnaryOpNode>(node)) {
-    return unary->pos_end.value();
-  }
-
-  throw std::runtime_error("get_pos_end()");
+  return node->get_pos_end();
 }
 
 Position get_pos_start(const std::shared_ptr<ASTNode>& node) {
-  if(auto number = std::dynamic_pointer_cast<NumberNode>(node)) {
-    return number->pos_start;
-  } else if(auto var_access = std::dynamic_pointer_cast<VarAccessNode>(node)) {
-    return var_access->pos_start;
-  } else if(auto bin_op = std::dynamic_pointer_cast<BinOpNode>(node)) {
-    return bin_op->pos_start.value();
-  } else if(auto var_assign = std::dynamic_pointer_cast<VarAssignNode>(node)) {
-    return var_assign->pos_start;
-  } else if(auto unary = std::dynamic_pointer_cast<UnaryOpNode>(node)) {
-    return unary->pos_start.value();
-  }
-
-  throw std::runtime_error("get_pos_start()");
+  return node->get_pos_start();
 }
 
 // end parser

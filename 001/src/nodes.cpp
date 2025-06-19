@@ -32,7 +32,7 @@ UnaryOpNode::UnaryOpNode(
   const Token& op_tok,
   const std::shared_ptr<ASTNode>& node
 ): op_tok(op_tok), node(node) {
-  pos_end = get_pos_end(node);
+  pos_end = ::get_pos_end(node);
 }
 
 BinOpNode::BinOpNode(
@@ -43,6 +43,6 @@ BinOpNode::BinOpNode(
   left_node(left_node),
   op_tok(op_tok), 
   right_node(right_node) {
-  pos_start = get_pos_start(left_node);
-  pos_end = get_pos_end(right_node);
+  pos_start = ::get_pos_start(left_node);
+  pos_end = ::get_pos_end(right_node);
 }

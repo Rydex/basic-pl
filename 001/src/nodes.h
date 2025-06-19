@@ -21,7 +21,9 @@ using SharedUnary = std::shared_ptr<UnaryOpNode>;
 using SharedAssign = std::shared_ptr<VarAssignNode>;
 
 struct ASTNode {
-  virtual RTResult accept(const Interpreter& visitor, Context& context) = 0;
+  virtual RTResult accept(const Interpreter& visitor, Context& context) = 0; // visitor
+  virtual Position get_pos_start() const = 0;
+  virtual Position get_pos_end() const = 0;
   virtual ~ASTNode() {}
 };
 
@@ -34,6 +36,9 @@ struct NumberNode : public ASTNode {
   : tok(token), pos_start(token.pos_start.value()), pos_end(token.pos_end.value()) {};
 
   RTResult accept(const Interpreter& visitor, Context& context) override ;
+
+  inline Position get_pos_start() const override { return pos_start; }
+  inline Position get_pos_end() const override { return pos_end; }
 };
 
 struct VarAccessNode : public ASTNode {
@@ -45,6 +50,9 @@ struct VarAccessNode : public ASTNode {
   VarAccessNode(const Token& token): var_name_tok(token) {}
 
   RTResult accept(const Interpreter& visitor, Context& context) override;
+
+  inline Position get_pos_start() const override { return pos_start; }
+  inline Position get_pos_end() const override { return pos_end; }
 };
 
 struct VarAssignNode : public ASTNode {
@@ -58,6 +66,9 @@ struct VarAssignNode : public ASTNode {
     : var_name_tok(tok), value_node(node) {}
 
   RTResult accept(const Interpreter& visitor, Context& context) override;
+
+  inline Position get_pos_start() const override { return pos_start; }
+  inline Position get_pos_end() const override { return pos_end; }
 };
 
 
@@ -74,6 +85,9 @@ struct BinOpNode : public ASTNode {
   );
 
   RTResult accept(const Interpreter& visitor, Context& context) override;
+
+  inline Position get_pos_start() const override { return pos_start.value(); }
+  inline Position get_pos_end() const override { return pos_end.value(); }
 };
 
 struct UnaryOpNode : public ASTNode {
@@ -87,6 +101,9 @@ struct UnaryOpNode : public ASTNode {
   );
 
   RTResult accept(const Interpreter& visitor, Context& context) override;
+
+  inline Position get_pos_start() const override { return pos_start.value(); }
+  inline Position get_pos_end() const override { return pos_end.value(); }
 };
 
 #endif
