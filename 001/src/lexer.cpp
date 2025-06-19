@@ -129,7 +129,10 @@ TokenPair Lexer::make_not_equals() {
   }
 
   advance();
-  return { std::nullopt, ExpectedCharException(pos_start, pos, "'=' expected (after '!')") };
+  return { 
+    std::nullopt,
+    std::make_shared<ExpectedCharException>(pos_start, pos, "'=' expected (after '!')") 
+  };
 }
 
 Token Lexer::make_equals() {
