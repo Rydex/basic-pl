@@ -159,16 +159,16 @@ ParseResult Parser::expr() {
   }
 
   ParseResult node_expr = bin_op([this]() { return term(); }, { PLS_T, MIN_T });
-  std::shared_ptr<ASTNode> node = res.register_(node_expr);
 
-  if(res.error) {
+  if(node_expr.error) {
     return res.failure(std::make_shared<InvalidSyntaxException>(
       cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-      "expected 'var', int, float, identifier, '+', '-' or '('"
+      // "expected 'var', int, float, identifier, '+', '-' or '('"
+      "override"
     ));
   }
 
-  return res.success(node);
+  return node_expr;
 }
 
 ParseResult Parser::bin_op(

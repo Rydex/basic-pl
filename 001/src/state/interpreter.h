@@ -30,6 +30,7 @@ public:
   );
   Number& set_context(const std::optional<Context>& context = std::nullopt);
   inline TokenValue get_value() const { return value; };
+  Number copy();
 
   NumberPair added_to(const Number& other) const;
   NumberPair subbed_by(const Number& other) const;

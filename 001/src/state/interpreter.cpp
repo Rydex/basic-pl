@@ -54,6 +54,12 @@ Number& Number::set_context(const std::optional<Context>& context) {
   return *this;
 }
 
+Number Number::copy() {
+  return Number(value)
+    .set_pos(pos_start.value(), pos_end.value())
+    .set_context(context);
+}
+
 NumberPair Number::added_to(const Number& other) const {
   return { 
     Number(this->value + other.value).set_context(this->context), nullptr };
@@ -128,9 +134,17 @@ RTResult Interpreter::visit_VarAccessNode(const VarAccessNode& node, Context& co
     using T = std::decay_t<decltype(val)>;
 
     if constexpr (std::is_same_v<T, int>) {
-      return res.success(Number((double)val).set_context(context));
+      return res.success(
+        Number(static_cast<double>(val))
+        .set_context(context)
+        .set_pos(node.pos_start, node.pos_end)
+      );
     } else if constexpr (std::is_same_v<T, double>) {
-      return res.success(Number(val).set_context(context));
+      return res.success(
+        Number(val)
+        .set_context(context)
+        .set_pos(node.pos_start, node.pos_end)
+      );
     } else {
       throw std::runtime_error("visit_VarAccessNode");
     }
