@@ -132,7 +132,7 @@ ParseResult Parser::expr() {
     if(cur_tok->type != ID_T) {
       return res.failure(std::make_shared<InvalidSyntaxException>(
         cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-        "expected identifier"
+        "expected identifier after 'var'"
       ));
     }
 
@@ -143,7 +143,7 @@ ParseResult Parser::expr() {
     if(cur_tok->type != EQU_T) {
       return res.failure(std::make_shared<InvalidSyntaxException>(
         cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-        "expected '='"
+        "expected '=' after identifier"
       ));
     }
 
@@ -157,6 +157,7 @@ ParseResult Parser::expr() {
     // return res.success(VarAssignNode(var_name, other_expr));
     return res.success(std::make_shared<VarAssignNode>(var_name, other_expr.node));
   }
+
   ParseResult node_expr = bin_op([this]() { return term(); }, { PLS_T, MIN_T });
   std::shared_ptr<ASTNode> node = res.register_(node_expr);
 
