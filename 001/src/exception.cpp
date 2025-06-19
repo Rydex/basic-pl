@@ -75,6 +75,12 @@ std::string RTException::generate_traceback() const {
   return "traceback (most recent call last):\n" + result;
 }
 
+ExpectedCharException::ExpectedCharException(
+  const Position& pos_start,
+  const Position& pos_end,
+  const std::string& details
+): Exception(pos_start, pos_end, "Expected Character", details) {}
+
 std::string string_with_arrows(
   const std::string& text,
   const Position& pos_start,

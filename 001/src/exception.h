@@ -56,6 +56,15 @@ public:
   std::string generate_traceback() const;
 };
 
+class ExpectedCharException : public Exception {
+public:
+  ExpectedCharException(
+    const Position& pos_start,
+    const Position& pos_end,
+    const std::string& details
+  );
+};
+
 std::string string_with_arrows(
   const std::string& text,
   const Position& pos_start,
