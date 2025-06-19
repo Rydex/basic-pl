@@ -112,7 +112,11 @@ Token Lexer::make_identifier() {
   return Token(type, id_str, pos_start, pos);
 }
 
-RunType run(const std::string& fn, const std::string& text, const std::shared_ptr<SymbolTable>& table) {
+RunType run(
+  const std::string& fn,
+  const std::string& text,
+  const std::shared_ptr<SymbolTable>& table
+) {
   table->set("null", -1);
   table->set("quit", 0);
 

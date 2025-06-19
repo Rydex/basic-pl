@@ -48,7 +48,7 @@ public:
 
   std::shared_ptr<Exception> error = nullptr;
   std::shared_ptr<ASTNode> node = nullptr;
-  RegisterVariant register_(const ParseResult& res);
+  std::shared_ptr<ASTNode> register_(const ParseResult& res);
   void register_advance();
   ParseResult& success(const std::shared_ptr<ASTNode>& node);
   ParseResult& failure(const std::shared_ptr<Exception>& error);

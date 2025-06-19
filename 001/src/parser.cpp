@@ -11,7 +11,7 @@ void ParseResult::register_advance() {
   advance_count++;
 }
 
-RegisterVariant ParseResult::register_(const ParseResult& res) {
+std::shared_ptr<ASTNode> ParseResult::register_(const ParseResult& res) {
   this->advance_count += res.advance_count;
   if(res.error) this->error = res.error;
   return res.node;
@@ -51,7 +51,7 @@ ParseResult Parser::parse() {
   if(!res.error && cur_tok->type != EOF_T) {
     return res.failure(std::make_shared<InvalidSyntaxException>(
       cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-      "expected '+', '-', '*, '/' or '^'"
+      "expected '+', '-', '*', '/' or '^'"
     ));
   }
 
@@ -96,8 +96,8 @@ ParseResult Parser::atom() {
   }
 
   return res.failure(std::make_shared<InvalidSyntaxException>(
-      tok.pos_start.value(), tok.pos_end.value(),
-      "expected int, float, identifier, '+', '-' or '('"
+    cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+    "expected int, float, identifier, '+', '-' or '('"
   ));
 }
 
@@ -157,26 +157,17 @@ ParseResult Parser::expr() {
     // return res.success(VarAssignNode(var_name, other_expr));
     return res.success(std::make_shared<VarAssignNode>(var_name, other_expr.node));
   }
+  ParseResult node_expr = bin_op([this]() { return term(); }, { PLS_T, MIN_T });
+  std::shared_ptr<ASTNode> node = res.register_(node_expr);
 
-  RegisterVariant node_expr = res.register_(
-    bin_op([this]() { return term(); }, { PLS_T, MIN_T })
-  );
-
-  ParseResult node;
-
-  if(std::holds_alternative<ParseResult>(node_expr)) {
-    node = std::get<ParseResult>(node_expr);
-  } else {
-    node.node = std::get<std::shared_ptr<ASTNode>>(node_expr);
-  }
-
-  if(res.error)
+  if(res.error) {
     return res.failure(std::make_shared<InvalidSyntaxException>(
       cur_tok->pos_start.value(), cur_tok->pos_end.value(),
       "expected 'var', int, float, identifier, '+', '-' or '('"
     ));
+  }
 
-  return res.success(node.node);
+  return res.success(node);
 }
 
 ParseResult Parser::bin_op(

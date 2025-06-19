@@ -24,12 +24,12 @@ auto handle_nodes = [](const auto& val) -> void {
 
 int main() {
   std::string input;
-  std::shared_ptr<SymbolTable> symbols = std::make_shared<SymbolTable>();
+  std::shared_ptr<SymbolTable> global = std::make_shared<SymbolTable>();
 
   do {
     std::cout << "program (type quit to quit) > ";
     std::getline(std::cin, input);
-    const auto&[ast, error] = run("<stdin>", input, symbols);
+    const auto&[ast, error] = run("<stdin>", input, global);
 
     if(error) { // if theres an error print it as string
       std::cout << error->as_string() << '\n'; 
