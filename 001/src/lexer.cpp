@@ -16,7 +16,7 @@ void Lexer::advance() {
   cur_char = (pos.get_idx() < (int)text.size()) ? text[pos.get_idx()] : '\0';
 }
 
-token_pair Lexer::make_tokens() {
+VectorPair Lexer::make_tokens() {
   std::vector<Token> tokens{};
 
     while(cur_char != '\0') {
@@ -40,15 +40,22 @@ token_pair Lexer::make_tokens() {
       } else if (cur_char == '%') {
         tokens.emplace_back(MOD_T, std::nullopt, pos);
         advance();
-      } else if (cur_char == '=') {
-        tokens.emplace_back(EQU_T, std::nullopt, pos);
-        advance();
       } else if (cur_char == '(') {
         tokens.emplace_back(LPR_T, std::nullopt, pos);
         advance();
       } else if (cur_char == ')') {
         tokens.emplace_back(RPR_T, std::nullopt, pos);
         advance();
+      } else if (cur_char == '!') {
+        const auto&[tok, error] = make_not_equals();
+        if(error) return { {}, error };
+        tokens.emplace_back(tok.value());
+      } else if (cur_char == '=') {
+        tokens.emplace_back(make_equals());
+      } else if (cur_char == '<') {
+        tokens.emplace_back(make_lt());
+      } else if (cur_char == '>') {
+        tokens.emplace_back(make_gt());
       } else if ((std::isdigit(cur_char) || cur_char == '.') && cur_char != '.') {
         tokens.emplace_back(make_number());
       } else if ((std::isalnum(cur_char) || cur_char == '_')) {
@@ -58,7 +65,7 @@ token_pair Lexer::make_tokens() {
         char ch = cur_char;
         advance();
         return {
-          std::vector<Token>{},
+          {},
           std::make_shared<IllegalCharException>(pos_start, pos, ch)
         };
       }
@@ -110,6 +117,56 @@ Token Lexer::make_identifier() {
   std::string type = ( in_keywords(id_str) ) ? KWD_T : ID_T;
 
   return Token(type, id_str, pos_start, pos);
+}
+
+TokenPair Lexer::make_not_equals() {
+  Position pos_start = pos.copy();
+  advance();
+
+  if(cur_char == '=') {
+    advance();
+    return { Token(NE_T, std::nullopt, pos_start, pos), nullptr };
+  }
+
+  advance();
+  return { std::nullopt, ExpectedCharException(pos_start, pos, "'=' expected (after '!')") };
+}
+
+Token Lexer::make_equals() {
+  Position pos_start = pos.copy();
+  std::string tok_type = EQU_T;
+  advance();
+
+  if(cur_char == '=') {
+    advance();
+    tok_type = EE_T;
+  }
+
+  return Token(tok_type, std::nullopt, pos_start, pos);
+}
+
+Token Lexer::make_lt() {
+  std::string tok_type = LT_T;
+  Position pos_start = pos.copy();
+  advance();
+
+  if(cur_char == '=') {
+    tok_type = LTE_T;
+  }
+
+  return Token(tok_type, std::nullopt, pos_start, pos);
+}
+
+Token Lexer::make_gt() {
+  std::string tok_type = GT_T;
+  Position pos_start = pos.copy();
+  advance();
+
+  if(cur_char == '=') {
+    tok_type = GTE_T;
+  }
+
+  return Token(tok_type, std::nullopt, pos_start, pos);
 }
 
 RunType run(

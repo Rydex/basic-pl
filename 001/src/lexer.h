@@ -24,13 +24,23 @@ const std::string PLS_T = "PLUS",
                   EOF_T = "EOF",
                   EQU_T = "EQUALS",
                   POW_T = "POWER",
-                  MOD_T = "MODULUS";
+                  MOD_T = "MODULUS",
+                  EE_T  = "EE",
+                  NE_T  = "NE",
+                  LT_T  = "LT",
+                  GT_T  = "GT",
+                  LTE_T = "LTE",
+                  GTE_T = "GTE";
 
 const std::vector<std::string> KEYWORDS = {
-  "var"
+  "var",
+  "and",
+  "or",
+  "not"
 };
 
-using token_pair = std::pair<std::vector<Token>, std::shared_ptr<Exception>>;
+using VectorPair = std::pair<std::vector<Token>, std::shared_ptr<Exception>>;
+using TokenPair = std::pair<std::optional<Token>, std::shared_ptr<Exception>>;
 
 class Lexer {
 private:
@@ -44,9 +54,13 @@ public:
 
   bool in_keywords(const std::string& text);
   void advance();
-  token_pair make_tokens();
+  VectorPair make_tokens();
   Token make_number();
   Token make_identifier();
+  TokenPair make_not_equals();
+  Token make_equals();
+  Token make_lt();
+  Token make_gt();
 };
 
 using RunType = std::pair<std::optional<RTVariant>, std::shared_ptr<Exception>>;
