@@ -81,12 +81,13 @@ ParseResult Parser::atom() {
     advance();
     ParseResult expr_res = expr();
 
-    if(expr_res.error) return expr_res;
+    if(expr_res.error) return res;
 
     if(cur_tok->type == RPR_T) {
       res.register_advance();
-    advance();
+      advance();
       return res.success(expr_res.node);
+
     } else {
       return res.failure(std::make_shared<InvalidSyntaxException>(
         cur_tok->pos_start.value(), cur_tok->pos_end.value(),
@@ -96,7 +97,7 @@ ParseResult Parser::atom() {
   }
 
   return res.failure(std::make_shared<InvalidSyntaxException>(
-    cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+    tok.pos_start.value(), tok.pos_end.value(),
     "expected int, float, identifier, '+', '-' or '('"
   ));
 }
@@ -158,17 +159,12 @@ ParseResult Parser::expr() {
     return res.success(std::make_shared<VarAssignNode>(var_name, other_expr.node));
   }
 
-  ParseResult node_expr = bin_op([this]() { return term(); }, { PLS_T, MIN_T });
+  ParseResult node_res = bin_op([this]() { return term(); }, { PLS_T, MIN_T });
+  std::shared_ptr<ASTNode> node = res.register_(node_res);
 
-  if(node_expr.error) {
-    return res.failure(std::make_shared<InvalidSyntaxException>(
-      cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-      // "expected 'var', int, float, identifier, '+', '-' or '('"
-      "override"
-    ));
-  }
+  if(res.error) { return res; }
 
-  return node_expr;
+  return res.success(node);
 }
 
 ParseResult Parser::bin_op(
