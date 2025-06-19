@@ -1,0 +1,19 @@
+, = newline
+
+nodes testing:
+	2 + 2
+	4 + (2 * 2)
+	7 - (2 * (45 / 2))
+	1 ^ (2 - 0)
+
+vars testing:
+	var a = 0, var b = 1, a + b
+	var a = 23, var b = 21, a - b
+	var a = var b = var c = 10 (should store number 10 in a, b, and c)
+	var a = 2, a (should output 2)
+
+errors testing:
+	var a = 2, b = 0, a / b (should throw division by zero)
+	var a = 2, b = 0, a % b (should throw mod by zero)
+	var $$$ (should throw illegal char error)
+	var a22222 (should throw invalid syntax)
