@@ -27,7 +27,7 @@ const std::string PLS_T = "PLUS",
                   MOD_T = "MODULUS";
 
 const std::vector<std::string> KEYWORDS = {
-  "VAR"
+  "var"
 };
 
 using token_pair = std::pair<std::vector<Token>, std::shared_ptr<Exception>>;

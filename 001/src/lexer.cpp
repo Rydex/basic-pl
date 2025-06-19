@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include "context.h"
+#include "exception.h"
 #include "parser.h"
 #include "position.h"
 #include "state/interpreter.h"
@@ -58,7 +59,7 @@ token_pair Lexer::make_tokens() {
         advance();
         return {
           std::vector<Token>{},
-          std::make_shared<Exception>(IllegalCharException(pos_start, pos, ch))
+          std::make_shared<IllegalCharException>(IllegalCharException(pos_start, pos, ch))
         };
       }
     }

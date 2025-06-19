@@ -125,7 +125,7 @@ ParseResult Parser::term() {
 ParseResult Parser::expr() {
   ParseResult res;
 
-  if(cur_tok->matches(KWD_T, "VAR")) {
+  if(cur_tok->matches(KWD_T, "var")) {
     res.register_advance();
     advance();
 
@@ -171,7 +171,7 @@ ParseResult Parser::expr() {
   if(res.error)
     return res.failure(std::make_shared<InvalidSyntaxException>(InvalidSyntaxException(
       cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-      "expected 'VAR', int, float, identifier, '+', '-' or '('"
+      "expected 'var', int, float, identifier, '+', '-' or '('"
     )));
 
   return res.success(node.node);
