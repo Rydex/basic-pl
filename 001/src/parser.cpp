@@ -159,7 +159,9 @@ ParseResult Parser::expr() {
     return res.success(std::make_shared<VarAssignNode>(var_name, other_expr.node));
   }
 
-  ParseResult node_res = bin_op([this]() { return term(); }, { PLS_T, MIN_T });
+  ParseResult node_res = bin_op(
+    [this]() { return comp_expr(); }, { {KWD_T, "AND"}, {KWD_T, "OR"} }
+  );
   std::shared_ptr<ASTNode> node = res.register_(node_res);
 
   if(res.error) { return res; }
@@ -169,7 +171,7 @@ ParseResult Parser::expr() {
 
 ParseResult Parser::bin_op(
   const std::function<ParseResult()>& func_a,
-  const std::vector<std::string>& ops,
+  const std::vector<std::pair<std::string, std::string>>& ops,
   const std::optional<std::function<ParseResult()>>& func_b
 ) {
   std::function<ParseResult()> other_func = func_b.value_or(func_a);
@@ -180,8 +182,10 @@ ParseResult Parser::bin_op(
   if(left_res.error) return left_res; // check if theres an error and if yes, return early
   std::shared_ptr<ASTNode> left = left_res.node; // extract node from left_res
 
-   while(cur_tok && std::find(ops.begin(), ops.end(), cur_tok->type)!=ops.end()) { // check while cur_tok exists and
-      // the type is in the vector
+  while(
+    std::find(ops.begin(), ops.end(), cur_tok->type) != ops.end()
+  ) { // check while cur_tok exists and
+      // the type/value is in the vector
       Token op_tok = cur_tok.value(); // get operator token which is just current token
       res.register_advance();
     advance(); // advance

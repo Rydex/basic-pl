@@ -32,7 +32,7 @@ public:
   ParseResult power();
   ParseResult bin_op(
     const std::function<ParseResult()>& func_a,
-    const std::vector<std::string>& ops,
+    const std::vector<std::pair<std::string, std::string>>& ops,
     const std::optional<std::function<ParseResult()>>& func_b = std::nullopt
   );
 };
