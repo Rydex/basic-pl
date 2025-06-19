@@ -59,7 +59,7 @@ token_pair Lexer::make_tokens() {
         advance();
         return {
           std::vector<Token>{},
-          std::make_shared<IllegalCharException>(IllegalCharException(pos_start, pos, ch))
+          std::make_shared<IllegalCharException>(pos_start, pos, ch)
         };
       }
     }

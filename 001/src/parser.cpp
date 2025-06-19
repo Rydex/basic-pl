@@ -49,10 +49,10 @@ ParseResult Parser::parse() {
   ParseResult res = expr();
 
   if(!res.error && cur_tok->type != EOF_T) {
-    return res.failure(std::make_shared<InvalidSyntaxException>(InvalidSyntaxException(
+    return res.failure(std::make_shared<InvalidSyntaxException>(
       cur_tok->pos_start.value(), cur_tok->pos_end.value(),
       "expected '+', '-', '*, '/' or '^'"
-    )));
+    ));
   }
 
   return res;
@@ -88,17 +88,17 @@ ParseResult Parser::atom() {
     advance();
       return res.success(expr_res.node);
     } else {
-      return res.failure(std::make_shared<InvalidSyntaxException>(InvalidSyntaxException(
-              cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-              "expected ')'"
-      )));
+      return res.failure(std::make_shared<InvalidSyntaxException>(
+        cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+        "expected ')'"
+      ));
     }
   }
 
-  return res.failure(std::make_shared<InvalidSyntaxException>(InvalidSyntaxException(
+  return res.failure(std::make_shared<InvalidSyntaxException>(
       tok.pos_start.value(), tok.pos_end.value(),
       "expected int, float, identifier, '+', '-' or '('"
-  )));
+  ));
 }
 
 ParseResult Parser::factor() {
@@ -130,10 +130,10 @@ ParseResult Parser::expr() {
     advance();
 
     if(cur_tok->type != ID_T) {
-      return res.failure(std::make_shared<InvalidSyntaxException>(InvalidSyntaxException(
+      return res.failure(std::make_shared<InvalidSyntaxException>(
         cur_tok->pos_start.value(), cur_tok->pos_end.value(),
         "expected identifier"
-      )));
+      ));
     }
 
     Token var_name = cur_tok.value();
@@ -141,10 +141,10 @@ ParseResult Parser::expr() {
     advance();
 
     if(cur_tok->type != EQU_T) {
-      return res.failure(std::make_shared<InvalidSyntaxException>(InvalidSyntaxException(
+      return res.failure(std::make_shared<InvalidSyntaxException>(
         cur_tok->pos_start.value(), cur_tok->pos_end.value(),
         "expected '='"
-      )));
+      ));
     }
 
     res.register_advance();
@@ -158,7 +158,9 @@ ParseResult Parser::expr() {
     return res.success(std::make_shared<VarAssignNode>(var_name, other_expr.node));
   }
 
-  RegisterVariant node_expr = res.register_(bin_op([this]() { return term(); }, { PLS_T, MIN_T }));
+  RegisterVariant node_expr = res.register_(
+    bin_op([this]() { return term(); }, { PLS_T, MIN_T })
+  );
 
   ParseResult node;
 
@@ -169,10 +171,10 @@ ParseResult Parser::expr() {
   }
 
   if(res.error)
-    return res.failure(std::make_shared<InvalidSyntaxException>(InvalidSyntaxException(
+    return res.failure(std::make_shared<InvalidSyntaxException>(
       cur_tok->pos_start.value(), cur_tok->pos_end.value(),
       "expected 'var', int, float, identifier, '+', '-' or '('"
-    )));
+    ));
 
   return res.success(node.node);
 }

@@ -69,11 +69,11 @@ NumberPair Number::multiplied_by(const Number& other) const {
 
 NumberPair Number::divided_by(const Number& other) const {
   if(other.value == 0) {
-    return { std::nullopt, std::make_shared<RTException>(RTException(
+    return { std::nullopt, std::make_shared<RTException>(
       other.context,
       other.pos_start.value(), other.pos_end.value(),
       "division by zero"
-      )) };
+      ) };
   }
 
   return { Number(this->value / other.value).set_context(this->context), nullptr };
@@ -85,11 +85,11 @@ NumberPair Number::powed_by(const Number& other) const {
 
 NumberPair Number::modded_by(const Number& other) const {
   if(other.value == 0) {
-    return { std::nullopt, std::make_shared<RTException>(RTException(
+    return { std::nullopt, std::make_shared<RTException>(
       other.context,
       other.pos_start.value(), other.pos_end.value(),
       "modulus by zero"
-    )) };
+    ) };
   }
 
   return { Number(std::fmod(this->value, other.value)).set_context(this->context), nullptr };
@@ -117,17 +117,12 @@ RTResult Interpreter::visit_VarAccessNode(const VarAccessNode& node, Context& co
   }
 
   if(!value) {
-    return res.failure(std::make_shared<RTException>(RTException(
+    return res.failure(std::make_shared<RTException>(
       context,
       node.pos_start, node.pos_end,
       var_name + " is not defined"
-    )));
+    ));
   }
-
-  // return res.success(value.value());
-  // return std::visit([&](const auto& val) -> RTResult {
-  //   return res.success(val);
-  // }, value.value());
 
   return std::visit([&](const auto& val) -> RTResult {
     using T = std::decay_t<decltype(val)>;
@@ -154,11 +149,11 @@ RTResult Interpreter::visit_VarAssignNode(const VarAssignNode& node, Context& co
   if(res.error) return res;
 
   if(var_name == "null" || var_name == "quit") {
-    return res.failure(std::make_shared<RTException>(RTException(
+    return res.failure(std::make_shared<RTException>(
       context,
       node.pos_start, node.pos_end,
       "cannot reassign built-in variable " + var_name
-    )));
+    ));
   }
 
   // std::cout << "setting " << var_name << " to value " << value.get_value();
