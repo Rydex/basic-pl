@@ -127,7 +127,7 @@ ParseResult Parser::term() {
 }
 
 ParseResult Parser::arith_expr() {
-  asdasd
+  return bin_op([this]() { return term(); }, { PLS_T, MIN_T });
 }
 
 ParseResult Parser::comp_expr() {
@@ -152,7 +152,7 @@ ParseResult Parser::comp_expr() {
   if(res.error)
     return res.failure(std::make_shared<InvalidSyntaxException>(
       cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-      "expected int, float, identifier, '+', '-', '(' or 'NOT'"
+      "expected int, float, identifier, '+', '-', '(' or 'not'"
     ));
 
   return res.success(node_expr);
