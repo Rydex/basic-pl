@@ -2,8 +2,11 @@
 #include "exception.h"
 #include "lexer.h"
 #include "nodes.h"
+#include "token.h"
 #include <algorithm>
 #include <memory>
+#include <string>
+#include <type_traits>
 
 // parse result
 
@@ -123,6 +126,38 @@ ParseResult Parser::term() {
   return bin_op([this]() { return factor(); }, { MUL_T, DIV_T });
 }
 
+ParseResult Parser::arith_expr() {
+  asdasd
+}
+
+ParseResult Parser::comp_expr() {
+  ParseResult res;
+  std::optional<Token> op_tok;
+
+  if(cur_tok->matches(KWD_T, "NOT")) {
+    op_tok = cur_tok;
+    res.register_advance();
+    advance();
+
+    std::shared_ptr<ASTNode> node_expr = res.register_(comp_expr());
+    if(res.error) return res;
+
+    return res.success(std::make_shared<UnaryOpNode>(op_tok, node_expr));
+  }
+
+  std::shared_ptr<ASTNode> node_expr = res.register_(bin_op(
+    [this]() { return arith_expr(); }, { EE_T, NE_T, LT_T, GT_T, LTE_T, GTE_T }
+  ));
+
+  if(res.error)
+    return res.failure(std::make_shared<InvalidSyntaxException>(
+      cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+      "expected int, float, identifier, '+', '-', '(' or 'NOT'"
+    ));
+
+  return res.success(node_expr);
+}
+
 ParseResult Parser::expr() {
   ParseResult res;
 
@@ -159,10 +194,9 @@ ParseResult Parser::expr() {
     return res.success(std::make_shared<VarAssignNode>(var_name, other_expr.node));
   }
 
-  ParseResult node_res = bin_op(
+  std::shared_ptr<ASTNode> node = res.register_(bin_op(
     [this]() { return comp_expr(); }, { {KWD_T, "AND"}, {KWD_T, "OR"} }
-  );
-  std::shared_ptr<ASTNode> node = res.register_(node_res);
+  ));
 
   if(res.error) { return res; }
 
@@ -173,7 +207,51 @@ ParseResult Parser::bin_op(
   const std::function<ParseResult()>& func_a,
   const std::vector<std::pair<std::string, std::string>>& ops,
   const std::optional<std::function<ParseResult()>>& func_b
-) {
+) { // overload with { {tok_type, tok_value} }
+  std::function<ParseResult()> other_func = func_b.value_or(func_a);
+
+  ParseResult res; // parseresult object
+  ParseResult left_res = func_a(); // parseresult extracted from func_a()
+
+  if(left_res.error) return left_res; // check if theres an error and if yes, return early
+  std::shared_ptr<ASTNode> left = left_res.node; // extract node from left_res
+  std::string target_name = cur_tok->type;
+  TokenValue target_value = cur_tok->value.value();
+
+  while(
+    cur_tok &&
+    std::find_if(ops.begin(), ops.end(), [&](const auto& p) -> bool {
+      return std::visit([&](const auto& val) -> bool {
+        if constexpr(std::is_same_v<std::decay_t<decltype(val)>, std::string>) {
+          return p.first == cur_tok->type && p.second == val;
+        } else {
+          return false;
+        }
+      }, cur_tok->value.value());
+    }) != ops.end()
+  ) { // check while cur_tok exists and
+      // the type/value is in the vector
+      Token op_tok = cur_tok.value(); // get operator token which is just current token
+      res.register_advance();
+      advance(); // advance
+      ParseResult right_res = other_func(); // parseresult extracted from func()
+
+      if(right_res.error) return right_res; // if theres an error return early
+
+      std::shared_ptr<ASTNode> right = right_res.node; // extract node from right_res
+
+      left = std::make_shared<BinOpNode>(left, op_tok, right); // finally, make
+      // a shared binopnode pointer consisting of the 3 elements
+  }
+
+  return res.success(left);
+}
+
+ParseResult Parser::bin_op(
+    const std::function<ParseResult()>& func_a,
+    const std::vector<std::string>& ops,
+    const std::optional<std::function<ParseResult()>>& func_b
+) { // normal
   std::function<ParseResult()> other_func = func_b.value_or(func_a);
 
   ParseResult res; // parseresult object

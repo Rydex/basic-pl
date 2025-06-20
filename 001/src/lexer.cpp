@@ -172,13 +172,14 @@ Token Lexer::make_gt() {
   return Token(tok_type, std::nullopt, pos_start, pos);
 }
 
+std::shared_ptr<SymbolTable> global = std::make_shared<SymbolTable>();
+
 RunType run(
   const std::string& fn,
-  const std::string& text,
-  const std::shared_ptr<SymbolTable>& table
+  const std::string& text
 ) {
-  table->set("null", -1);
-  table->set("quit", 0);
+  global->set("null", -1);
+  global->set("quit", 0);
 
   Lexer lexer(fn, text);
 
@@ -191,7 +192,7 @@ RunType run(
   if(ast.error) return { std::nullopt, ast.error };
 
   Context context("<module>");
-  context.symbol_table = table;
+  context.symbol_table = global;
 
   Interpreter interpreter;
   RTResult result = interpreter.visit(ast.node, context);

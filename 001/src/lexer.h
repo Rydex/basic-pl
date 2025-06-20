@@ -67,8 +67,7 @@ using RunType = std::pair<std::optional<RTVariant>, std::shared_ptr<Exception>>;
 
 RunType run(
   const std::string& fn,
-  const std::string& text,
-  const std::shared_ptr<SymbolTable>& table
+  const std::string& text
 );
 
 #endif
