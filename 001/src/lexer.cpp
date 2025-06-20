@@ -154,6 +154,7 @@ Token Lexer::make_lt() {
   advance();
 
   if(cur_char == '=') {
+    advance();
     tok_type = LTE_T;
   }
 
@@ -166,6 +167,7 @@ Token Lexer::make_gt() {
   advance();
 
   if(cur_char == '=') {
+    advance();
     tok_type = GTE_T;
   }
 
