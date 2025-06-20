@@ -40,7 +40,11 @@ const std::vector<std::string> KEYWORDS = {
   "if",
   "then",
   "elif",
-  "else"
+  "else",
+  "for",
+  "to",
+  "step",
+  "while"
 };
 
 using VectorPair = std::pair<std::vector<Token>, std::shared_ptr<Exception>>;
