@@ -216,15 +216,14 @@ ParseResult Parser::bin_op(
   if(left_res.error) return left_res; // check if theres an error and if yes, return early
   std::shared_ptr<ASTNode> left = left_res.node; // extract node from left_res
   std::string target_name = cur_tok->type;
-  std::optional<TokenValue> target_value = cur_tok->value;
-
-  if(!target_value) {
-    throw std::runtime_error("!target_value");
-  }
 
   while(
     cur_tok &&
     std::find_if(ops.begin(), ops.end(), [&](const auto& p) -> bool {
+      std::optional<TokenValue> target_value = cur_tok->value;
+
+      if(!target_value) return false;
+
       return std::visit([&](const auto& val) -> bool {
         if constexpr(std::is_same_v<std::decay_t<decltype(val)>, std::string>) {
           return p.first == cur_tok->type && p.second == val;
@@ -234,18 +233,18 @@ ParseResult Parser::bin_op(
       }, target_value.value());
     }) != ops.end()
   ) { // check while cur_tok exists and
-      // the type/value is in the vector
-      Token op_tok = cur_tok.value(); // get operator token which is just current token
-      res.register_advance();
-      advance(); // advance
-      ParseResult right_res = other_func(); // parseresult extracted from func()
+    // the type/value is in the vector
+    Token op_tok = cur_tok.value(); // get operator token which is just current token
+    res.register_advance();
+    advance(); // advance
+    ParseResult right_res = other_func(); // parseresult extracted from func()
 
-      if(right_res.error) return right_res; // if theres an error return early
+    if(right_res.error) return right_res; // if theres an error return early
 
-      std::shared_ptr<ASTNode> right = right_res.node; // extract node from right_res
+    std::shared_ptr<ASTNode> right = right_res.node; // extract node from right_res
 
-      left = std::make_shared<BinOpNode>(left, op_tok, right); // finally, make
-      // a shared binopnode pointer consisting of the 3 elements
+    left = std::make_shared<BinOpNode>(left, op_tok, right); // finally, make
+    // a shared binopnode pointer consisting of the 3 elements
   }
 
   return res.success(left);
