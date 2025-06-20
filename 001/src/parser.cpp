@@ -54,7 +54,7 @@ ParseResult Parser::parse() {
   if(!res.error && cur_tok->type != EOF_T) {
     return res.failure(std::make_shared<InvalidSyntaxException>(
       cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-      "expected '+', '-', '*', '/' or '^'"
+      "expected '+', '-', '*', '/' or '^', '==', '<', '>', '<=', '>=', 'and' or 'or'"
     ));
   }
 
