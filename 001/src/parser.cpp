@@ -65,6 +65,75 @@ ParseResult Parser::power() {
   return bin_op([this]() { return atom(); }, { POW_T, MOD_T }, [this]() { return factor(); });
 }
 
+ParseResult Parser::if_expr() {
+  ParseResult res;
+  std::vector<
+    std::pair<std::shared_ptr<ASTNode>, std::shared_ptr<ASTNode>>
+  > cases = {};
+  std::shared_ptr<ASTNode> else_case;
+
+  if(!cur_tok->matches(KWD_T, "if")) {
+    return res.failure(std::make_shared<InvalidSyntaxException>(
+      cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+      "expected 'if'"
+    ));
+  }
+
+  res.register_advance();
+  advance();
+
+  std::shared_ptr<ASTNode> condition = res.register_(expr());
+  if(res.error) return res;
+
+  if(!cur_tok->matches(KWD_T, "then")) {
+    return res.failure(std::make_shared<InvalidSyntaxException>(
+      cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+      "expected 'then'"
+    ));
+  }
+
+  res.register_advance();
+  advance();
+
+  std::shared_ptr<ASTNode> expr_res = res.register_(expr());
+  if(res.error) return res;
+
+  cases.emplace_back(condition, expr_res);
+
+  while(cur_tok->matches(KWD_T, "elif")) {
+    res.register_advance();
+    advance();
+
+    condition = res.register_(expr());
+    if(res.error) return res;
+
+    if(!cur_tok->matches(KWD_T, "then")) {
+      return res.failure(std::make_shared<InvalidSyntaxException>(
+        cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+        "expected 'then'"
+      ));
+    }
+
+    res.register_advance();
+    advance();
+
+    expr_res = res.register_(expr());
+    if(res.error) return res;
+
+    cases.emplace_back(condition, expr_res);
+  }
+
+  if(cur_tok->matches(KWD_T, "else")) {
+    res.register_advance();
+    advance();
+
+    else_case = res.register_(expr());
+    if(res.error) return res;
+  }
+
+  return res.success(std::make_shared<IfNode>(cases, else_case));
+}
+
 ParseResult Parser::atom() {
   ParseResult res;
   Token tok = cur_tok.value();
@@ -97,6 +166,10 @@ ParseResult Parser::atom() {
         "expected ')'"
       ));
     }
+  } else if(cur_tok->matches(KWD_T, "if")) {
+    std::shared_ptr<ASTNode> if_expr_res = res.register_(if_expr());
+    if(res.error) return res;
+    return res.success(if_expr_res);
   }
 
   return res.failure(std::make_shared<InvalidSyntaxException>(

@@ -23,7 +23,7 @@ Number RTResult::register_(const RTResult& res) {
   return Number(-1);
 }
 
-RTResult& RTResult::success(const RTVariant& value) {
+RTResult& RTResult::success(const std::optional<RTVariant>& value) {
   this->value = value;
   return *this;
 }
@@ -178,6 +178,10 @@ NumberPair Number::not_operator() const {
     ).set_context(context),
     nullptr
   };
+}
+
+bool Number::is_true() const {
+  return value != 0;
 }
 
 std::string Number::as_string() const {
@@ -390,4 +394,28 @@ RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node, Context& contex
   if(err) return res.failure(err);
   
   return res.success(number.set_pos(node.pos_start, node.pos_end));
+}
+
+RTResult Interpreter::visit_IfNode(const IfNode& node, Context& context) const {
+  RTResult res;
+
+  for(const auto&[condition, expr] : node.cases) {
+    Number condition_value = res.register_(visit(condition, context));
+    if(res.error) return res;
+
+    if(condition_value.is_true()) {
+      Number expr_value = res.register_(visit(expr, context));
+      if(res.error) return res;
+
+      return res.success(expr_value);
+    }
+  }
+
+  if(node.else_case) {
+    Number else_value = res.register_(visit(node.else_case, context));
+    if(res.error) return res;
+    return res.success(else_value);
+  }
+
+  return res.success(std::nullopt);
 }

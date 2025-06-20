@@ -32,6 +32,7 @@ public:
   inline TokenValue get_value() const { return value; };
   Number copy();
 
+  // operations
   NumberPair added_to(const Number& other) const;
   NumberPair subbed_by(const Number& other) const;
   NumberPair multiplied_by(const Number& other) const;
@@ -48,6 +49,8 @@ public:
   NumberPair or_comp(const Number& other) const;
   NumberPair not_operator() const;
 
+  bool is_true() const;
+
   std::string as_string() const;
 };
 
@@ -59,18 +62,20 @@ public:
   std::shared_ptr<Exception> error = nullptr;
 
   Number register_(const RTResult& res);
-  RTResult& success(const RTVariant& value);
+  RTResult& success(const std::optional<RTVariant>& value);
   RTResult& failure(const std::shared_ptr<Exception>& error);
 };
 
 class Interpreter {
 public:
+  // visitors
   RTResult visit(const std::shared_ptr<ASTNode>& node, Context& context) const;
   RTResult visit_NumberNode(const NumberNode& node, Context& context) const;
   RTResult visit_BinOpNode(const BinOpNode& node, Context& context) const;
   RTResult visit_UnaryOpNode(const UnaryOpNode& node, Context& context) const;
   RTResult visit_VarAccessNode(const VarAccessNode& node, Context& context) const;
   RTResult visit_VarAssignNode(const VarAssignNode& node, Context& context) const;
+  RTResult visit_IfNode(const IfNode& node, Context& context) const;
 };
 
 

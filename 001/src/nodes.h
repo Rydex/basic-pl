@@ -5,6 +5,7 @@
 #include <variant>
 #include <optional>
 #include <memory>
+#include <vector>
 
 struct BinOpNode;
 struct UnaryOpNode;
@@ -20,6 +21,7 @@ using SharedBin = std::shared_ptr<BinOpNode>;
 using SharedUnary = std::shared_ptr<UnaryOpNode>;
 using SharedAssign = std::shared_ptr<VarAssignNode>;
 
+// abstract base class
 struct ASTNode {
   virtual RTResult accept(const Interpreter& visitor, Context& context) = 0; // visitor
   virtual Position get_pos_start() const = 0;
@@ -104,6 +106,28 @@ struct UnaryOpNode : public ASTNode {
 
   inline Position get_pos_start() const override { return pos_start.value(); }
   inline Position get_pos_end() const override { return pos_end.value(); }
+};
+
+struct IfNode : public ASTNode {
+  std::vector<
+    std::pair<std::shared_ptr<ASTNode>, std::shared_ptr<ASTNode>>
+  > cases;
+  std::shared_ptr<ASTNode> else_case;
+
+  Position pos_start, pos_end;
+
+  IfNode(
+    const std::vector<std::pair<std::shared_ptr<ASTNode>, std::shared_ptr<ASTNode>>>& cases,
+    const std::shared_ptr<ASTNode>& else_case
+  )
+    : cases(cases), else_case(else_case),
+      pos_start(cases.at(0).first->get_pos_start()),
+      pos_end(else_case ? else_case->get_pos_end() : cases.back().first->get_pos_end()) {}
+
+  RTResult accept(const Interpreter& visitor, Context& context) override;
+
+  inline Position get_pos_start() const override { return pos_start; }
+  inline Position get_pos_end() const override { return pos_end; }
 };
 
 #endif
