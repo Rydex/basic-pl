@@ -43,7 +43,7 @@ std::string Token::as_string() const {
   }, value.value());
 }
 
-bool Token::matches(const std::string& type, const TokenValue& val) {
+bool Token::matches(const std::string& type, const TokenValue& val) const {
   // return this->type == type && this->value.value() == value;
   if(!this->value) return false;
 

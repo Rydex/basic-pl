@@ -86,7 +86,10 @@ NumberPair Number::divided_by(const Number& other) const {
 }
 
 NumberPair Number::powed_by(const Number& other) const {
-  return { Number(std::pow(this->value, other.value)).set_context(this->context), nullptr };
+  return { 
+    Number(std::pow(this->value, other.value)).set_context(this->context),
+    nullptr 
+  };
 }
 
 NumberPair Number::modded_by(const Number& other) const {
@@ -98,7 +101,10 @@ NumberPair Number::modded_by(const Number& other) const {
     ) };
   }
 
-  return { Number(std::fmod(this->value, other.value)).set_context(this->context), nullptr };
+  return { 
+    Number(std::fmod(this->value, other.value)).set_context(this->context), 
+    nullptr
+  };
 }
 
 std::string Number::as_string() const {
@@ -238,8 +244,39 @@ RTResult Interpreter::visit_BinOpNode(const BinOpNode& node, Context& context) c
     result = res;
     error = err;
 
-  }
+  } else if(node.op_tok.type == EE_T) {
+    const auto&[res, err] = left.eq_comp(right);
+    result = res;
+    error = err;
 
+  } else if(node.op_tok.type == NE_T) {
+    const auto&[res, err] = left.ne_comp(right);
+    result = res;
+    error = err;
+
+  } else if(node.op_tok.type == LT_T) {
+    const auto&[res, err] = left.lt_comp(right);
+    result = res;
+    error = err;
+
+  } else if(node.op_tok.type == GT_T) {
+    const auto&[res, err] = left.gt_comp(right);
+    result = res;
+    error = err;
+
+  } else if(node.op_tok.type == LTE_T) {
+    const auto&[res, err] = left.lte_comp(right);
+    result = res;
+    error = err;
+
+  } else if(node.op_tok.type == GTE_T) {
+    const auto&[res, err] = left.gte_comp(right);
+    result = res;
+    error = err;
+
+  } else if(node.op_tok.matches()) {
+    
+  }
 
   if(error && !result.has_value())
     return res.failure(error);
