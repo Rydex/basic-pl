@@ -134,7 +134,7 @@ ParseResult Parser::comp_expr() {
   ParseResult res;
   std::optional<Token> op_tok;
 
-  if(cur_tok->matches(KWD_T, "NOT")) {
+  if(cur_tok->matches(KWD_T, "not")) {
     op_tok = cur_tok;
     res.register_advance();
     advance();
@@ -195,7 +195,7 @@ ParseResult Parser::expr() {
   }
 
   std::shared_ptr<ASTNode> node = res.register_(bin_op(
-    [this]() { return comp_expr(); }, { {KWD_T, "AND"}, {KWD_T, "OR"} }
+    [this]() { return comp_expr(); }, { {KWD_T, "and"}, {KWD_T, "or"} }
   ));
 
   if(res.error) { return res; }
@@ -216,7 +216,11 @@ ParseResult Parser::bin_op(
   if(left_res.error) return left_res; // check if theres an error and if yes, return early
   std::shared_ptr<ASTNode> left = left_res.node; // extract node from left_res
   std::string target_name = cur_tok->type;
-  TokenValue target_value = cur_tok->value.value();
+  std::optional<TokenValue> target_value = cur_tok->value;
+
+  if(!target_value) {
+    throw std::runtime_error("!target_value");
+  }
 
   while(
     cur_tok &&
@@ -227,7 +231,7 @@ ParseResult Parser::bin_op(
         } else {
           return false;
         }
-      }, cur_tok->value.value());
+      }, target_value.value());
     }) != ops.end()
   ) { // check while cur_tok exists and
       // the type/value is in the vector
