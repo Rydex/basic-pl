@@ -130,4 +130,8 @@ struct IfNode : public ASTNode {
   inline Position get_pos_end() const override { return pos_end; }
 };
 
+struct ForNode : public ASTNode {
+  Token var_name_tok;
+};
+
 #endif
