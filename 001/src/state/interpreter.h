@@ -38,7 +38,15 @@ public:
   NumberPair divided_by(const Number& other) const;
   NumberPair powed_by(const Number& other) const;
   NumberPair modded_by(const Number& other) const;
-
+  NumberPair eq_comp(const Number& other) const;
+  NumberPair ne_comp(const Number& other) const;
+  NumberPair lt_comp(const Number& other) const;
+  NumberPair gt_comp(const Number& other) const;
+  NumberPair lte_comp(const Number& other) const;
+  NumberPair gte_comp(const Number& other) const;
+  NumberPair and_comp(const Number& other) const;
+  NumberPair or_comp(const Number& other) const;
+  NumberPair not_operator() const;
 
   std::string as_string() const;
 };

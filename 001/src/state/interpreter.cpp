@@ -107,6 +107,79 @@ NumberPair Number::modded_by(const Number& other) const {
   };
 }
 
+NumberPair Number::eq_comp(const Number& other) const {
+  return {
+    Number(static_cast<int>(value == other.value))
+      .set_context(context),
+    nullptr
+  };
+}
+
+NumberPair Number::ne_comp(const Number& other) const {
+  return {
+    Number(static_cast<int>(value != other.value))
+      .set_context(context),
+    nullptr
+  };
+}
+
+NumberPair Number::lt_comp(const Number& other) const {
+  return {
+    Number(static_cast<int>(value < other.value))
+      .set_context(context),
+    nullptr
+  };
+}
+
+NumberPair Number::gt_comp(const Number& other) const {
+  return {
+    Number(static_cast<int>(value > other.value))
+      .set_context(context),
+    nullptr
+  };
+}
+
+NumberPair Number::lte_comp(const Number& other) const {
+  return {
+    Number(static_cast<int>(value <= other.value))
+      .set_context(context),
+    nullptr
+  };
+}
+
+NumberPair Number::gte_comp(const Number& other) const {
+  return {
+    Number(static_cast<int>(value >= other.value))
+      .set_context(context),
+    nullptr
+  };
+}
+
+NumberPair Number::and_comp(const Number& other) const {
+  return {
+    Number(static_cast<int>(value && other.value))
+      .set_context(context),
+    nullptr
+  };
+}
+
+NumberPair Number::or_comp(const Number& other) const {
+  return {
+    Number(static_cast<int>(value || other.value))
+      .set_context(context),
+    nullptr
+  };
+}
+
+NumberPair Number::not_operator() const {
+  return {
+    Number(
+      (value == 0) ? 1 : 0
+    ).set_context(context),
+    nullptr
+  };
+}
+
 std::string Number::as_string() const {
   std::ostringstream oss;
   oss << value;
@@ -274,8 +347,16 @@ RTResult Interpreter::visit_BinOpNode(const BinOpNode& node, Context& context) c
     result = res;
     error = err;
 
-  } else if(node.op_tok.matches()) {
-    
+  } else if(node.op_tok.matches(KWD_T, "and")) {
+    const auto&[res, err] = left.and_comp(right);
+    result = res;
+    error = err;
+
+  } else if(node.op_tok.matches(KWD_T, "or")) {
+    const auto&[res, err] = left.or_comp(right);
+    result = res;
+    error = err;
+
   }
 
   if(error && !result.has_value())
@@ -295,6 +376,12 @@ RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node, Context& contex
 
   if(node.op_tok.type == MIN_T) {
     const auto&[result, error] = number.multiplied_by(Number(-1));
+
+    number = result.value();
+    err = error;
+
+  } else if(node.op_tok.matches(KWD_T, "not")) {
+    const auto&[result, error] = number.not_operator();
 
     number = result.value();
     err = error;

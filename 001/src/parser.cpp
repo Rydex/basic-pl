@@ -142,7 +142,7 @@ ParseResult Parser::comp_expr() {
     std::shared_ptr<ASTNode> node_expr = res.register_(comp_expr());
     if(res.error) return res;
 
-    return res.success(std::make_shared<UnaryOpNode>(op_tok, node_expr));
+    return res.success(std::make_shared<UnaryOpNode>(op_tok.value(), node_expr));
   }
 
   std::shared_ptr<ASTNode> node_expr = res.register_(bin_op(
