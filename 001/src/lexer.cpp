@@ -182,6 +182,8 @@ RunType run(
 ) {
   global->set("null", -1);
   global->set("quit", 0);
+  global->set("true", 1);
+  global->set("false", 1);
 
   Lexer lexer(fn, text);
 
