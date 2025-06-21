@@ -30,6 +30,10 @@ RTResult IfNode::accept(const Interpreter& visitor, Context& context) {
   return visitor.visit_IfNode(*this, context);
 }
 
+RTResult accept(const Interpreter& visitor, Context& context) {
+  return visitor.visit_ForNode(*this, context);
+}
+
 // end visitors
 
 UnaryOpNode::UnaryOpNode(

@@ -132,6 +132,36 @@ struct IfNode : public ASTNode {
 
 struct ForNode : public ASTNode {
   Token var_name_tok;
+  std::shared_ptr<ASTNode> start_value, end_value, step_value, body;
+  Position pos_start, pos_end;
+
+  ForNode(
+    const Token& var_name_tok,
+    const std::shared_ptr<ASTNode>& start_value,
+    const std::shared_ptr<ASTNode>& end_value,
+    const std::shared_ptr<ASTNode>& step_value,
+    const std::shared_ptr<ASTNode>& body
+  )
+    : var_name_tok(var_name_tok), start_value(start_value),
+    end_value(end_value), step_value(step_value), body(body),
+    pos_start(var_name_tok.pos_start.value()), pos_end(body->get_pos_end()) {}
+
+  RTResult accept(const Interpreter& visitor, Context& context) override;
+
+  inline Position get_pos_start() const override { return pos_start; }
+  inline Position get_pos_end() const override { return pos_end; }
+};
+
+struct WhileNode : public ASTNode {
+  std::shared_ptr<ASTNode> condition, body;
+  Position pos_start, pos_end;
+
+  WhileNode(
+    const std::shared_ptr<ASTNode>& condition,
+    const std::shared_ptr<ASTNode>& body
+  )
+    : condition(condition), body(body),
+    pos_start(condition->get_pos_start()), pos_end(body->get_pos_end()) {}
 };
 
 #endif
