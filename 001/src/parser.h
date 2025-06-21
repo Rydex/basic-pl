@@ -33,6 +33,8 @@ public:
   ParseResult comp_expr();
   ParseResult arith_expr();
   ParseResult if_expr();
+  ParseResult while_expr();
+  ParseResult for_expr();
   ParseResult bin_op(
     const std::function<ParseResult()>& func_a,
     const std::vector<std::pair<std::string, std::string>>& ops,

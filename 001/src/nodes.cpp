@@ -30,8 +30,12 @@ RTResult IfNode::accept(const Interpreter& visitor, Context& context) {
   return visitor.visit_IfNode(*this, context);
 }
 
-RTResult accept(const Interpreter& visitor, Context& context) {
+RTResult ForNode::accept(const Interpreter& visitor, Context& context) {
   return visitor.visit_ForNode(*this, context);
+}
+
+RTResult WhileNode::accept(const Interpreter& visitor, Context& context) {
+  return visitor.visit_WhileNode(*this, context);
 }
 
 // end visitors

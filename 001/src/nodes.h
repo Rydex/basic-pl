@@ -162,6 +162,11 @@ struct WhileNode : public ASTNode {
   )
     : condition(condition), body(body),
     pos_start(condition->get_pos_start()), pos_end(body->get_pos_end()) {}
+
+  RTResult accept(const Interpreter& visitor, Context& context) override;
+
+  inline Position get_pos_start() const override { return pos_start; }
+  inline Position get_pos_end() const override { return pos_end; }
 };
 
 #endif

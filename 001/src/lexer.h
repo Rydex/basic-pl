@@ -11,26 +11,26 @@
 #include "position.h"
 #include "parser.h"
 
-const std::string PLS_T = "PLUS",
-                  MIN_T = "MINUS",
-                  DIV_T = "DIVIDE",
-                  MUL_T = "MULTIPLY",
-                  ID_T  = "IDENTIFIER",
-                  KWD_T = "KEYWORD",
-                  LPR_T = "LPAREN",
-                  RPR_T = "RPAREN",
-                  INT_T = "INT",
-                  FLT_T = "FLOAT",
-                  EOF_T = "EOF",
-                  EQU_T = "EQUALS",
-                  POW_T = "POWER",
-                  MOD_T = "MODULUS",
-                  EE_T  = "EE",
-                  NE_T  = "NE",
-                  LT_T  = "LT",
-                  GT_T  = "GT",
-                  LTE_T = "LTE",
-                  GTE_T = "GTE";
+const std::string PLS_T = "plus",
+                  MIN_T = "minus",
+                  DIV_T = "divide",
+                  MUL_T = "multiply",
+                  ID_T  = "identifier",
+                  KWD_T = "keyword",
+                  LPR_T = "lparen",
+                  RPR_T = "rparen",
+                  INT_T = "int",
+                  FLT_T = "float",
+                  EOF_T = "eof",
+                  EQU_T = "equals",
+                  POW_T = "power",
+                  MOD_T = "modulus",
+                  EE_T  = "double-equals",
+                  NE_T  = "not-equal",
+                  LT_T  = "less-than",
+                  GT_T  = "greater-than",
+                  LTE_T = "less-than-or-equal",
+                  GTE_T = "greater-than-or-equal";
 
 const std::vector<std::string> KEYWORDS = {
   "var",
@@ -44,7 +44,8 @@ const std::vector<std::string> KEYWORDS = {
   "for",
   "to",
   "step",
-  "while"
+  "while",
+  "do"
 };
 
 using VectorPair = std::pair<std::vector<Token>, std::shared_ptr<Exception>>;

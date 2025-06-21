@@ -134,6 +134,118 @@ ParseResult Parser::if_expr() {
   return res.success(std::make_shared<IfNode>(cases, else_case));
 }
 
+ParseResult Parser::for_expr() {
+  ParseResult res;
+
+  if(!cur_tok->matches(KWD_T, "for")) {
+    return res.failure(std::make_shared<InvalidSyntaxException>(
+      cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+      "expected 'for'"
+    ));
+  }
+
+  res.register_advance();
+  advance();
+
+  if(cur_tok->type != ID_T) {
+    return res.failure(std::make_shared<InvalidSyntaxException>(
+      cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+      "expected identifier after 'for', got " + cur_tok->type
+    ));
+  }
+
+  Token var_name = cur_tok.value();
+  res.register_advance();
+  advance();
+
+  if(cur_tok->type != EQU_T) {
+    return res.failure(std::make_shared<InvalidSyntaxException>(
+      cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+      "expected '=' after identifier, got " + cur_tok->type
+    ));
+  }
+
+  res.register_advance();
+  advance();
+
+  std::shared_ptr<ASTNode> start_value = res.register_(expr());
+  advance();
+
+  if(!cur_tok->matches(KWD_T, "to")) {
+    return res.failure(std::make_shared<InvalidSyntaxException>(
+      cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+      "expected 'to' after equals, got " + cur_tok->type
+    ));
+  }
+
+  res.register_advance();
+  advance();
+
+  std::shared_ptr<ASTNode> end_value = res.register_(expr());
+  if(res.error) return res;
+
+  std::shared_ptr<ASTNode> step_value;
+
+  if(cur_tok->matches(KWD_T, "step")) {
+    res.register_advance();
+    advance();
+
+    step_value = res.register_(expr());
+    if(res.error) return res;
+  } else {
+    step_value = nullptr;
+  }
+
+  if(!cur_tok->matches(KWD_T, "do")) {
+    return res.failure(std::make_shared<InvalidSyntaxException>(
+      cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+      "expected 'do' after for expression, got " + cur_tok->type
+    ));
+  }
+
+  res.register_advance();
+  advance();
+
+  std::shared_ptr<ASTNode> body = res.register_(expr());
+  if(res.error) return res;
+
+  return res.success(std::make_shared<ForNode>(
+    var_name, start_value, end_value, step_value, body
+  ));
+}
+
+ParseResult Parser::while_expr() {
+  ParseResult res;
+
+  if(!cur_tok->matches(KWD_T, "while")) {
+    return res.failure(std::make_shared<InvalidSyntaxException>(
+      cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+      "expected 'while', got " + cur_tok->type
+    ));
+  }
+
+  res.register_advance();
+  advance();
+
+  std::shared_ptr<ASTNode> condition = res.register_(expr());
+  if(res.error) return res;
+
+  if(!cur_tok->matches(KWD_T, "do")) {
+    return res.failure(std::make_shared<InvalidSyntaxException>(
+      cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+      "expected 'do' after condition, got " + cur_tok->type
+    ));
+  }
+
+  res.register_advance();
+  advance();
+
+  std::shared_ptr<ASTNode> body = res.register_(expr());
+  if(res.error) return res;
+
+  return res.success(std::make_shared<WhileNode>(condition, body));
+}
+
 ParseResult Parser::atom() {
   ParseResult res;
   Token tok = cur_tok.value();
@@ -164,19 +276,32 @@ ParseResult Parser::atom() {
     } else {
       return res.failure(std::make_shared<InvalidSyntaxException>(
         cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-        "expected ')'"
+        "expected ')', got " + cur_tok->type
       ));
     }
+
   } else if(cur_tok->matches(KWD_T, "if")) {
     std::shared_ptr<ASTNode> if_expr_res = res.register_(if_expr());
 
     if(res.error) return res;
     return res.success(if_expr_res);
+
+  } else if(cur_tok->matches(KWD_T, "for")) {
+    std::shared_ptr<ASTNode> for_expr_res = res.register_(for_expr());
+
+    if(res.error) return res;
+    return res.success(for_expr_res);
+
+  } else if(cur_tok->matches(KWD_T, "while")) {
+    std::shared_ptr<ASTNode> while_expr_res = res.register_(while_expr());
+
+    if(res.error) return res;
+    return res.success(while_expr_res);
   }
   
   return res.failure(std::make_shared<InvalidSyntaxException>(
     tok.pos_start.value(), tok.pos_end.value(),
-    "expected int, float, identifier, '+', '-' or '('"
+    "expected int, float, identifier, '+', '-' or '(', got " + tok.type
   ));
 }
 
