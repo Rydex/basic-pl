@@ -4,13 +4,14 @@
 #include "nodes.h"
 #include "token.h"
 #include <algorithm>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <type_traits>
 
 // parse result
-
 void ParseResult::register_advance() {
+  std::cout << "advanced (current count: " << advance_count << ")\n";
   advance_count++;
 }
 
@@ -49,7 +50,8 @@ Token Parser::advance() {
 }
 
 ParseResult Parser::parse() {
-  ParseResult res = expr();
+  ParseResult res;
+  res.node = res.register_(expr());
 
   if(!res.error && cur_tok->type != EOF_T) {
     return res.failure(std::make_shared<InvalidSyntaxException>(
@@ -152,8 +154,9 @@ ParseResult Parser::atom() {
     res.register_advance();
     advance();
     ParseResult expr_res = expr();
+    res.register_(expr_res);
 
-    if(expr_res.error) return res;
+    if(res.error) return res;
 
     if(cur_tok->type == RPR_T) {
       res.register_advance();
@@ -168,6 +171,7 @@ ParseResult Parser::atom() {
     }
   } else if(cur_tok->matches(KWD_T, "if")) {
     std::shared_ptr<ASTNode> if_expr_res = res.register_(if_expr());
+
     if(res.error) return res;
     return res.success(if_expr_res);
   }
@@ -185,11 +189,11 @@ ParseResult Parser::factor() {
   if(tok.type == PLS_T || tok.type == MIN_T) {
     res.register_advance();
     advance();
-    ParseResult factor_res = factor();
+    std::shared_ptr<ASTNode> node = res.register_(factor());
 
-    if(factor_res.error) return factor_res;
+    if(res.error) return res;
 
-    return res.success(std::make_shared<UnaryOpNode>(tok, factor_res.node));
+    return res.success(std::make_shared<UnaryOpNode>(tok, node));
   }
 
   return power();
@@ -212,7 +216,10 @@ ParseResult Parser::comp_expr() {
     res.register_advance();
     advance();
 
-    std::shared_ptr<ASTNode> node_expr = res.register_(comp_expr());
+    std::shared_ptr<ASTNode> node_expr = res.register_(bin_op(
+      [this]() { return comp_expr(); }, { EE_T, NE_T, LT_T, GT_T, LTE_T, GTE_T }
+    ));
+
     if(res.error) return res;
 
     return res.success(std::make_shared<UnaryOpNode>(op_tok.value(), node_expr));
@@ -258,18 +265,18 @@ ParseResult Parser::expr() {
 
     res.register_advance();
     advance();
-    ParseResult other_expr = expr();
-    res.register_(other_expr);
+    std::shared_ptr<ASTNode> other_expr = res.register_(expr());
 
     if(res.error) return res;
 
     // return res.success(VarAssignNode(var_name, other_expr));
-    return res.success(std::make_shared<VarAssignNode>(var_name, other_expr.node));
+    return res.success(std::make_shared<VarAssignNode>(var_name, other_expr));
   }
 
-  std::shared_ptr<ASTNode> node = res.register_(bin_op(
+  ParseResult node = bin_op(
     [this]() { return comp_expr(); }, { {KWD_T, "and"}, {KWD_T, "or"} }
-  ));
+  );
+  res.register_(node);
 
   if(res.error) { 
     return res.failure(std::make_shared<InvalidSyntaxException>(
@@ -278,7 +285,7 @@ ParseResult Parser::expr() {
     ));
   }
 
-  return res.success(node);
+  return res.success(node.node);
 }
 
 ParseResult Parser::bin_op(
@@ -291,8 +298,8 @@ ParseResult Parser::bin_op(
   ParseResult res; // parseresult object
   ParseResult left_res = func_a(); // parseresult extracted from func_a()
 
-  if(left_res.error) return left_res; // check if theres an error and if yes, return early
-  std::shared_ptr<ASTNode> left = left_res.node; // extract node from left_res
+  std::shared_ptr<ASTNode> left = res.register_(left_res); // extract node from left_res
+  if(res.error) return res; // check if theres an error and if yes, return early
   std::string target_name = cur_tok->type;
 
   while(
@@ -316,10 +323,10 @@ ParseResult Parser::bin_op(
     res.register_advance();
     advance(); // advance
     ParseResult right_res = other_func(); // parseresult extracted from func()
+    std::shared_ptr<ASTNode> right = res.register_(right_res); // extract node from right_res
 
-    if(right_res.error) return right_res; // if theres an error return early
+    if(res.error) return res; // if theres an error return early
 
-    std::shared_ptr<ASTNode> right = right_res.node; // extract node from right_res
 
     left = std::make_shared<BinOpNode>(left, op_tok, right); // finally, make
     // a shared binopnode pointer consisting of the 3 elements
@@ -337,9 +344,9 @@ ParseResult Parser::bin_op(
 
   ParseResult res; // parseresult object
   ParseResult left_res = func_a(); // parseresult extracted from func_a()
+  std::shared_ptr<ASTNode> left = res.register_(left_res); // extract node from left_res
 
-  if(left_res.error) return left_res; // check if theres an error and if yes, return early
-  std::shared_ptr<ASTNode> left = left_res.node; // extract node from left_res
+  if(res.error) return res; // check if theres an error and if yes, return early
 
   while(
     std::find(ops.begin(), ops.end(), cur_tok->type) != ops.end()
@@ -349,10 +356,10 @@ ParseResult Parser::bin_op(
       res.register_advance();
     advance(); // advance
       ParseResult right_res = other_func(); // parseresult extracted from func()
+      std::shared_ptr<ASTNode> right = res.register_(right_res); // extract node from right_res
 
-      if(right_res.error) return right_res; // if theres an error return early
+      if(res.error) return res; // if theres an error return early
 
-      std::shared_ptr<ASTNode> right = right_res.node; // extract node from right_res
 
       left = std::make_shared<BinOpNode>(left, op_tok, right); // finally, make
       // a shared binopnode pointer consisting of the 3 elements
