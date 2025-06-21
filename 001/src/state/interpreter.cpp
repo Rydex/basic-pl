@@ -200,8 +200,8 @@ RTResult Interpreter::visit_VarAccessNode(const VarAccessNode& node, Context& co
   std::optional<TokenValue> value;
 
   try {
-    value = context.symbol_table->get(var_name).value();
-  } catch (std::bad_optional_access&) {
+    value = context.symbol_table->get(var_name);
+  } catch (std::out_of_range&) {
     value = std::nullopt;
   }
 
@@ -417,5 +417,5 @@ RTResult Interpreter::visit_IfNode(const IfNode& node, Context& context) const {
     return res.success(else_value);
   }
 
-  return res.success(std::nullopt);
+  return res.success(Number(0));
 }
