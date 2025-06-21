@@ -54,7 +54,7 @@ ParseResult Parser::parse() {
   if(!res.error && cur_tok->type != EOF_T) {
     return res.failure(std::make_shared<InvalidSyntaxException>(
       cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-      "expected '+', '-', '*', '/' or '^', '==', '<', '>', '<=', '>=', 'and' or 'or'"
+      "expected '+', '-', '*', '/', '^', '==', '!=', '<', '>', <=', '>=', 'and' or 'or'"
     ));
   }
 
@@ -271,7 +271,12 @@ ParseResult Parser::expr() {
     [this]() { return comp_expr(); }, { {KWD_T, "and"}, {KWD_T, "or"} }
   ));
 
-  if(res.error) { return res; }
+  if(res.error) { 
+    return res.failure(std::make_shared<InvalidSyntaxException>(
+      cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+      "expected 'var', int, float, identifier, '+', '-', '(' or 'not'"
+    ));
+  }
 
   return res.success(node);
 }

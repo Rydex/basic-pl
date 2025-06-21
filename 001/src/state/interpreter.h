@@ -9,6 +9,13 @@
 
 class Number;
 
+const std::vector<std::string> builtins = {
+  "null",
+  "quit",
+  "true",
+  "false"
+};
+
 using NumberPair = std::pair<
   std::optional<Number>,
   std::shared_ptr<Exception>

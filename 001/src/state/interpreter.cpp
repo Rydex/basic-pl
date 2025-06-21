@@ -246,11 +246,11 @@ RTResult Interpreter::visit_VarAssignNode(const VarAssignNode& node, Context& co
 
   if(res.error) return res;
 
-  if(var_name == "null" || var_name == "quit") {
+  if(std::ranges::find(builtins, var_name) != builtins.end()) {
     return res.failure(std::make_shared<RTException>(
       context,
       node.pos_start, node.pos_end,
-      "cannot reassign built-in variable " + var_name
+      "cannot reassign built-in variable '" + var_name + "'"
     ));
   }
 
