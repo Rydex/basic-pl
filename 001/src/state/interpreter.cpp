@@ -425,5 +425,11 @@ RTResult Interpreter::visit_IfNode(const IfNode& node, Context& context) const {
     return res.success(else_value);
   }
 
+  if(!node.else_case) {
+    Number else_value(-1);
+    if(res.error) return res;
+    return res.success(else_value);
+  }
+
   return res.success(std::nullopt);
 }

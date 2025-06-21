@@ -70,7 +70,7 @@ ParseResult Parser::if_expr() {
   std::vector<
     std::pair<std::shared_ptr<ASTNode>, std::shared_ptr<ASTNode>>
   > cases = {};
-  std::shared_ptr<ASTNode> else_case;
+  std::shared_ptr<ASTNode> else_case = nullptr;
 
   if(!cur_tok->matches(KWD_T, "if")) {
     return res.failure(std::make_shared<InvalidSyntaxException>(
