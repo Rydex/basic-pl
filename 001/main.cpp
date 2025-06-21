@@ -31,7 +31,7 @@ int main() {
 
     if(error) { // if theres an error print it as string
       std::cout << error->as_string() << '\n'; 
-    } else {
+    } else if(ast) {
       std::visit(handle_nodes, ast.value());
     }
   } while (input != "quit");

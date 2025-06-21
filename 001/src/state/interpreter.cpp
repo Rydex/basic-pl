@@ -209,7 +209,7 @@ RTResult Interpreter::visit_VarAccessNode(const VarAccessNode& node, Context& co
     return res.failure(std::make_shared<RTException>(
       context,
       node.pos_start, node.pos_end,
-      var_name + " is not defined"
+      "'" + var_name + "' is not defined"
     ));
   }
 
@@ -243,6 +243,7 @@ RTResult Interpreter::visit_VarAssignNode(const VarAssignNode& node, Context& co
   RTResult value_expr = visit(node.value_node, context);
   Number value = res.register_(value_expr);
 
+
   if(res.error) return res;
 
   if(var_name == "null" || var_name == "quit") {
@@ -253,6 +254,13 @@ RTResult Interpreter::visit_VarAssignNode(const VarAssignNode& node, Context& co
     ));
   }
 
+  if(!value_expr.value) {
+    return res.failure(std::make_shared<RTException>(
+      context,
+      node.pos_start, node.pos_end,
+      "'" + var_name + "' is not defined"
+    ));
+  }
   // std::cout << "setting " << var_name << " to value " << value.get_value();
 
   context.symbol_table->set(var_name, std::get<double>(value.get_value()));
@@ -417,5 +425,5 @@ RTResult Interpreter::visit_IfNode(const IfNode& node, Context& context) const {
     return res.success(else_value);
   }
 
-  return res.success(Number(0));
+  return res.success(std::nullopt);
 }
