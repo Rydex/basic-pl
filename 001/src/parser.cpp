@@ -4,14 +4,12 @@
 #include "nodes.h"
 #include "token.h"
 #include <algorithm>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <type_traits>
 
 // parse result
 void ParseResult::register_advance() {
-  std::cout << "advanced (current count: " << advance_count << ")\n";
   advance_count++;
 }
 
