@@ -118,7 +118,7 @@ std::string string_with_arrows(
 
     // bounds checking
     // this just ensures col end is within line length
-    if (col_end < 0 || col_end >= (int)line.length()) {
+    if (col_end < 0 || col_end > (int)line.length()) {
       col_end = line.length() - 1;
     }
 

@@ -22,43 +22,43 @@ VectorPair Lexer::make_tokens() {
     while(cur_char != '\0') {
       if(cur_char == '\t' || cur_char == ' ') {
         advance();
-      } else if (cur_char == '+') {
+      } else if(cur_char == '+') {
         tokens.emplace_back(PLS_T, std::nullopt, pos);
         advance();
-      } else if (cur_char == '-') {
+      } else if(cur_char == '-') {
         tokens.emplace_back(MIN_T, std::nullopt, pos);
         advance();
-      } else if (cur_char == '*') {
+      } else if(cur_char == '*') {
         tokens.emplace_back(MUL_T, std::nullopt, pos);
         advance();
-      } else if (cur_char == '/') {
+      } else if(cur_char == '/') {
         tokens.emplace_back(DIV_T, std::nullopt, pos);
         advance();
       } else if (cur_char == '^') {
         tokens.emplace_back(POW_T, std::nullopt, pos);
         advance();
-      } else if (cur_char == '%') {
+      } else if(cur_char == '%') {
         tokens.emplace_back(MOD_T, std::nullopt, pos);
         advance();
-      } else if (cur_char == '(') {
+      } else if(cur_char == '(') {
         tokens.emplace_back(LPR_T, std::nullopt, pos);
         advance();
-      } else if (cur_char == ')') {
+      } else if(cur_char == ')') {
         tokens.emplace_back(RPR_T, std::nullopt, pos);
         advance();
-      } else if (cur_char == '!') {
+      } else if(cur_char == '!') {
         const auto&[tok, error] = make_not_equals();
         if(error) return { {}, error };
         tokens.emplace_back(tok.value());
-      } else if (cur_char == '=') {
+      } else if(cur_char == '=') {
         tokens.emplace_back(make_equals());
-      } else if (cur_char == '<') {
+      } else if(cur_char == '<') {
         tokens.emplace_back(make_lt());
-      } else if (cur_char == '>') {
+      } else if(cur_char == '>') {
         tokens.emplace_back(make_gt());
-      } else if ((std::isdigit(cur_char) || cur_char == '.') && cur_char != '.') {
+      } else if((std::isdigit(cur_char) || cur_char == '.') && cur_char != '.') {
         tokens.emplace_back(make_number());
-      } else if ((std::isalnum(cur_char) || cur_char == '_')) {
+      } else if((std::isalnum(cur_char) || cur_char == '_')) {
         tokens.emplace_back(make_identifier());
       } else {
         Position pos_start = pos.copy();

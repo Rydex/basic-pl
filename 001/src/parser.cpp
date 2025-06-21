@@ -171,7 +171,7 @@ ParseResult Parser::atom() {
     if(res.error) return res;
     return res.success(if_expr_res);
   }
-
+  
   return res.failure(std::make_shared<InvalidSyntaxException>(
     tok.pos_start.value(), tok.pos_end.value(),
     "expected int, float, identifier, '+', '-' or '('"
