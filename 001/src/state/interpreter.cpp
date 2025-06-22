@@ -190,6 +190,8 @@ std::string Number::as_string() const {
   return oss.str();
 }
 
+// visit methods
+
 RTResult Interpreter::visit(const std::shared_ptr<ASTNode>& node, Context& context) const {
   return node->accept(*this, context);
 }
@@ -225,6 +227,12 @@ RTResult Interpreter::visit_VarAccessNode(const VarAccessNode& node, Context& co
     } else if constexpr (std::is_same_v<T, double>) {
       return res.success(
         Number(val)
+        .set_context(context)
+        .set_pos(node.pos_start, node.pos_end)
+      );
+    } else if constexpr (std::is_same_v<T, std::shared_ptr<Number>>) {
+      return res.success(
+        Number(std::get<double>(val->get_value()))
         .set_context(context)
         .set_pos(node.pos_start, node.pos_end)
       );
@@ -429,6 +437,66 @@ RTResult Interpreter::visit_IfNode(const IfNode& node, Context& context) const {
     Number else_value(-1);
     if(res.error) return res;
     return res.success(else_value);
+  }
+
+  return res.success(std::nullopt);
+}
+
+RTResult Interpreter::visit_ForNode(const ForNode& node, Context& context) const {
+  RTResult res;
+
+  Number start_value = res.register_(visit(node.start_value, context));
+  if(res.error) return res;
+
+  Number end_value = res.register_(visit(node.end_value, context));
+  if(res.error) return res;
+
+  Number step_value(-1);
+
+  if(node.step_value) {
+    step_value = res.register_(visit(node.step_value, context));
+    if(res.error) return res;
+  } else {
+    step_value = 1;
+  }
+
+  double i = std::get<double>(start_value.get_value());
+
+  std::function<bool()> condition;
+
+  if(std::get<double>(step_value.get_value()) >= 0) {
+    condition = [&]() -> bool { return i < std::get<double>(end_value.get_value()); };
+  } else {
+    condition = [&]() -> bool { return i > std::get<double>(end_value.get_value()); };
+  }
+
+  while(condition()) {
+    context.symbol_table->set(
+      std::get<std::string>(node.var_name_tok.value.value()),
+      std::make_shared<Number>(i)
+    );
+
+    i += std::get<double>(step_value.get_value());
+
+    res.register_(visit(node.body, context));
+    if(res.error) return res;
+
+  }
+
+  return res.success(Number(0));
+}
+
+RTResult Interpreter::visit_WhileNode(const WhileNode& node, Context& context) const {
+  RTResult res;
+
+  while(true) {
+    Number condition = res.register_(visit(node.condition, context));
+    if(res.error) return res;
+
+    if(!condition.is_true()) break;
+
+    res.register_(visit(node.body, context));
+    if(res.error) return res;
   }
 
   return res.success(std::nullopt);

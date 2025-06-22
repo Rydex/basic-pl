@@ -1,13 +1,16 @@
 #ifndef TOKEN
 #define TOKEN
 
+#include <memory>
 #include <variant>
 #include <optional>
 #include <string>
 #include <sstream>
 #include "position.h"
 
-using TokenValue = std::variant<int, double, std::string>;
+class Number;
+
+using TokenValue = std::variant<int, double, std::string, std::shared_ptr<Number>>;
 
 struct Token {
   std::string type;
@@ -22,8 +25,6 @@ struct Token {
   );
 
   bool matches(const std::string& type, const TokenValue& value) const;
-
-  std::string as_string() const;
 };
 
 #endif

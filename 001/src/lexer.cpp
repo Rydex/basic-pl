@@ -205,7 +205,7 @@ RunType run(
 
   if(result.error) {
     return { std::nullopt, result.error };
-  }  
+  }
 
   return { result.value.value(), nullptr };
 }

@@ -19,30 +19,6 @@ Token::Token(
   }
 }
 
-std::string Token::as_string() const {
-  if(!value)
-    return type;
-  // } else if(std::holds_alternative<int>(value.value())) {
-  //   return type + ':' + std::to_string(std::get<int>(value.value()));
-  // } else if(std::holds_alternative<double>(value.value())) {
-  //   std::ostringstream oss;
-  //   oss << std::get<double>(value.value());
-  //   return type + ':' + oss.str();
-  // }
-
-  return std::visit([this](const auto& val) -> std::string {
-    if constexpr (std::is_same_v<std::decay_t<decltype(val)>, int>) {
-      return type + ':' + std::to_string(val);
-    } else if constexpr (std::is_same_v<std::decay_t<decltype(val)>, double>) {
-      std::ostringstream oss;
-      oss << val;
-      return type + ':' + oss.str();
-    } else {
-      return type + ':' + val;
-    }
-  }, value.value());
-}
-
 bool Token::matches(const std::string& type, const TokenValue& val) const {
   // return this->type == type && this->value.value() == value;
   if(!this->value) return false;

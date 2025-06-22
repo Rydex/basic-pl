@@ -54,7 +54,8 @@ ParseResult Parser::parse() {
   if(!res.error && cur_tok->type != EOF_T) {
     return res.failure(std::make_shared<InvalidSyntaxException>(
       cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-      "expected '+', '-', '*', '/', '^', '==', '!=', '<', '>', <=', '>=', 'and' or 'or'"
+      "expected '+', '-', '*', '/', '^', '==', '!=', '<', '>', <=', '>=', 'and' or 'or', got "
+      + cur_tok->type
     ));
   }
 
@@ -75,7 +76,7 @@ ParseResult Parser::if_expr() {
   if(!cur_tok->matches(KWD_T, "if")) {
     return res.failure(std::make_shared<InvalidSyntaxException>(
       cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-      "expected 'if'"
+      "expected 'if', got " + cur_tok->type
     ));
   }
 
@@ -88,7 +89,7 @@ ParseResult Parser::if_expr() {
   if(!cur_tok->matches(KWD_T, "then")) {
     return res.failure(std::make_shared<InvalidSyntaxException>(
       cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-      "expected 'then'"
+      "expected 'then' after 'if' expression got " + cur_tok->type
     ));
   }
 
@@ -110,7 +111,7 @@ ParseResult Parser::if_expr() {
     if(!cur_tok->matches(KWD_T, "then")) {
       return res.failure(std::make_shared<InvalidSyntaxException>(
         cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-        "expected 'then'"
+        "expected 'then' after 'elif' expression, got " + cur_tok->type
       ));
     }
 
@@ -140,7 +141,7 @@ ParseResult Parser::for_expr() {
   if(!cur_tok->matches(KWD_T, "for")) {
     return res.failure(std::make_shared<InvalidSyntaxException>(
       cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-      "expected 'for'"
+      "expected 'for', got " + cur_tok->type
     ));
   }
 
@@ -169,7 +170,7 @@ ParseResult Parser::for_expr() {
   advance();
 
   std::shared_ptr<ASTNode> start_value = res.register_(expr());
-  advance();
+  if(res.error) return res;
 
   if(!cur_tok->matches(KWD_T, "to")) {
     return res.failure(std::make_shared<InvalidSyntaxException>(
@@ -199,7 +200,7 @@ ParseResult Parser::for_expr() {
   if(!cur_tok->matches(KWD_T, "do")) {
     return res.failure(std::make_shared<InvalidSyntaxException>(
       cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-      "expected 'do' after for expression, got " + cur_tok->type
+      "expected 'do' after 'for' expression, got " + cur_tok->type
     ));
   }
 

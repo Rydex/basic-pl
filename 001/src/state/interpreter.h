@@ -83,6 +83,8 @@ public:
   RTResult visit_VarAccessNode(const VarAccessNode& node, Context& context) const;
   RTResult visit_VarAssignNode(const VarAssignNode& node, Context& context) const;
   RTResult visit_IfNode(const IfNode& node, Context& context) const;
+  RTResult visit_ForNode(const ForNode& node, Context& context) const;
+  RTResult visit_WhileNode(const WhileNode& node, Context& context) const;
 };
 
 
