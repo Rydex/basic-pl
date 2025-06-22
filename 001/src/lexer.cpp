@@ -26,8 +26,7 @@ VectorPair Lexer::make_tokens() {
         tokens.emplace_back(PLS_T, std::nullopt, pos);
         advance();
       } else if(cur_char == '-') {
-        tokens.emplace_back(MIN_T, std::nullopt, pos);
-        advance();
+        tokens.emplace_back(make_minus_or_arrow());
       } else if(cur_char == '*') {
         tokens.emplace_back(MUL_T, std::nullopt, pos);
         advance();
@@ -56,6 +55,9 @@ VectorPair Lexer::make_tokens() {
         tokens.emplace_back(make_lt());
       } else if(cur_char == '>') {
         tokens.emplace_back(make_gt());
+      } else if(cur_char == ',') {
+        tokens.emplace_back(COM_T, std::nullopt, pos);
+        advance();
       } else if((std::isdigit(cur_char) || cur_char == '.') && cur_char != '.') {
         tokens.emplace_back(make_number());
       } else if((std::isalnum(cur_char) || cur_char == '_')) {
@@ -169,6 +171,18 @@ Token Lexer::make_gt() {
   if(cur_char == '=') {
     advance();
     tok_type = GTE_T;
+  }
+
+  return Token(tok_type, std::nullopt, pos_start, pos);
+}
+
+Token Lexer::make_minus_or_arrow() {
+  std::string tok_type = MIN_T;
+  Position pos_start = pos.copy();
+  advance();
+  
+  if(cur_char == '>') {
+    tok_type = ARW_T;
   }
 
   return Token(tok_type, std::nullopt, pos_start, pos);
