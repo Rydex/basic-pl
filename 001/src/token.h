@@ -8,9 +8,9 @@
 #include <sstream>
 #include "position.h"
 
-class Number;
+class Value;
 
-using TokenValue = std::variant<int, double, std::string, std::shared_ptr<Number>>;
+using TokenValue = std::variant<int, double, std::string, std::shared_ptr<Value>>;
 
 struct Token {
   std::string type;

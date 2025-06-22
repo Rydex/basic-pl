@@ -3,24 +3,26 @@
 #include "../position.h"
 #include "../lexer.h"
 #include <iostream>
+#include <memory>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <cmath>
 
-Number RTResult::register_(const RTResult& res) {
+std::shared_ptr<Value> RTResult::register_(const RTResult& res) {
   if(res.error) this->error = res.error;
   if(res.value)
     //return res.value.value();
-    return std::visit([&](const auto& val) -> Number {
-      if constexpr (std::is_same_v<std::decay_t<decltype(val)>, Number>) {
-        return val;
-      } else {
-        throw std::runtime_error("unsupported in register_()");
-      }
-    }, res.value.value());
+    return std::make_shared<Value>(std::visit([&](const auto& val) -> Number {
+        if constexpr (std::is_same_v<std::decay_t<decltype(val)>, Number>) {
+          return std::make_shared<Number>(val);
+        } else {
+          throw std::runtime_error("unsupported in register_()");
+        }
+      }, res.value.value())
+    );
 
-  return Number(-1);
+  return std::make_shared<Number>(-1);
 }
 
 RTResult& RTResult::success(const std::optional<RTVariant>& value) {
@@ -32,6 +34,99 @@ RTResult& RTResult::failure(const std::shared_ptr<Exception>& error) {
   this->error = std::move(error);
   this->value = std::nullopt;
   return *this;
+}
+
+Value& Value::set_pos(
+  const std::optional<Position>& pos_start,
+  const std::optional<Position>& pos_end
+) {
+  this->pos_start = pos_start;
+  this->pos_end = pos_end;
+
+  return *this;
+}
+
+Value& Value::set_context(
+  const std::optional<Context>& context
+) {
+  this->context = context;
+  return *this;
+}
+
+ValuePair Value::added_to(const std::shared_ptr<Value>& other) const {
+  return { nullptr, illegal_operation().error };
+}
+
+ValuePair Value::subbed_by(const std::shared_ptr<Value>& other) const {
+  return { nullptr, illegal_operation().error };
+}
+
+ValuePair Value::multiplied_by(const std::shared_ptr<Value>& other) const {
+  return { nullptr, illegal_operation().error };
+}
+
+ValuePair Value::divided_by(const std::shared_ptr<Value>& other) const {
+  return { nullptr, illegal_operation().error };
+}
+
+ValuePair Value::powed_by(const std::shared_ptr<Value>& other) const {
+  return { nullptr, illegal_operation().error };
+}
+
+ValuePair Value::modded_by(const std::shared_ptr<Value>& other) const {
+  return { nullptr, illegal_operation().error };
+}
+
+ValuePair Value::eq_comp(const std::shared_ptr<Value>& other) const {
+  return { nullptr, illegal_operation().error };
+}
+
+ValuePair Value::ne_comp(const std::shared_ptr<Value>& other) const {
+  return { nullptr, illegal_operation().error };
+}
+
+ValuePair Value::lt_comp(const std::shared_ptr<Value>& other) const {
+  return { nullptr, illegal_operation().error };
+}
+
+ValuePair Value::gt_comp(const std::shared_ptr<Value>& other) const {
+  return { nullptr, illegal_operation().error };
+}
+
+ValuePair Value::lte_comp(const std::shared_ptr<Value>& other) const {
+  return { nullptr, illegal_operation().error };
+}
+
+ValuePair Value::gte_comp(const std::shared_ptr<Value>& other) const {
+  return { nullptr, illegal_operation().error };
+}
+
+ValuePair Value::or_comp(const std::shared_ptr<Value>& other) const {
+  return { nullptr, illegal_operation().error };
+}
+
+ValuePair Value::and_comp(const std::shared_ptr<Value>& other) const {
+  return { nullptr, illegal_operation().error };
+}
+
+ValuePair Value::not_operator() const {
+  return { nullptr, illegal_operation().error };
+}
+
+RTResult Value::execute(const std::vector<std::shared_ptr<Value>>& args) {
+  return illegal_operation();
+}
+
+RTResult Value::illegal_operation(
+  const std::optional<std::shared_ptr<Value>>& other
+) const {
+  return RTResult().failure(
+    std::make_shared<RTException>(
+      context.value(),
+      pos_start.value(), pos_end.value(),
+      "illegal operation"
+    )
+  );
 }
 
 Number::Number(double value): value(value) {
@@ -54,130 +149,246 @@ Number& Number::set_context(const std::optional<Context>& context) {
   return *this;
 }
 
-Number Number::copy() {
-  return Number(value)
-    .set_pos(pos_start.value(), pos_end.value())
-    .set_context(context);
+std::shared_ptr<Value> Number::copy() {
+  std::shared_ptr<Value> number = std::make_shared<Number>(value);
+  number->set_pos(pos_start.value(), pos_end.value());
+  number->set_context(context);
+  return number;
 }
 
-NumberPair Number::added_to(const Number& other) const {
-  return { 
-    Number(this->value + other.value).set_context(this->context), nullptr };
+ValuePair Number::added_to(const std::shared_ptr<Value>& other) const {
+  auto other_type = std::dynamic_pointer_cast<Number>(other);
+
+  if(!other_type)
+    return { nullptr, illegal_operation().error };
+
+  std::shared_ptr<Value> number = std::make_shared<Number>(this->value + other_type->value);
+  number->set_context(this->context);
+  return { number, nullptr };
 }
 
-NumberPair Number::subbed_by(const Number& other) const {
-  return { Number(this->value - other.value).set_context(this->context), nullptr };
+ValuePair Number::subbed_by(const std::shared_ptr<Value>& other) const {
+  auto other_type = std::dynamic_pointer_cast<Number>(other);
+
+  if(!other_type)
+    return { nullptr, illegal_operation().error };
+
+  std::shared_ptr<Value> number = std::make_shared<Number>(this->value - other_type->value);
+  number->set_context(this->context);
+  return { number, nullptr };
 }
 
-NumberPair Number::multiplied_by(const Number& other) const {
-  return { Number(this->value * other.value).set_context(this->context), nullptr };
+ValuePair Number::multiplied_by(const std::shared_ptr<Value>& other) const {
+  auto other_type = std::dynamic_pointer_cast<Number>(other);
+
+  if(!other_type)
+    return { nullptr, illegal_operation().error };
+
+  std::shared_ptr<Value> number = std::make_shared<Number>(this->value * other_type->value);
+  number->set_context(this->context);
+  return { number, nullptr };
 }
 
-NumberPair Number::divided_by(const Number& other) const {
-  if(other.value == 0) {
-    return { std::nullopt, std::make_shared<RTException>(
-      other.context,
-      other.pos_start.value(), other.pos_end.value(),
+ValuePair Number::divided_by(const std::shared_ptr<Value>& other) const {
+  auto other_type = std::dynamic_pointer_cast<Number>(other);
+
+  if(!other_type)
+    return { nullptr, illegal_operation().error };
+
+  if(other_type->value == 0) {
+    return { nullptr, std::make_shared<RTException>(
+      other_type->context,
+      other_type->pos_start.value(), other_type->pos_end.value(),
       "division by zero"
       ) };
   }
 
-  return { Number(this->value / other.value).set_context(this->context), nullptr };
+  std::shared_ptr<Value> number = std::make_shared<Number>(this->value / other_type->value);
+  number->set_context(this->context);
+  return { number, nullptr };
 }
 
-NumberPair Number::powed_by(const Number& other) const {
-  return { 
-    Number(std::pow(this->value, other.value)).set_context(this->context),
-    nullptr 
-  };
+ValuePair Number::powed_by(const std::shared_ptr<Value>& other) const {
+  auto other_type = std::dynamic_pointer_cast<Number>(other);
+
+  if(!other_type)
+    return { nullptr, illegal_operation().error };
+
+  std::shared_ptr<Value> number = std::make_shared<Number>(std::pow(this->value, other_type->value));
+  number->set_context(this->context);
+  return { number, nullptr };
 }
 
-NumberPair Number::modded_by(const Number& other) const {
-  if(other.value == 0) {
-    return { std::nullopt, std::make_shared<RTException>(
-      other.context,
-      other.pos_start.value(), other.pos_end.value(),
+ValuePair Number::modded_by(const std::shared_ptr<Value>& other) const {
+  auto other_type = std::dynamic_pointer_cast<Number>(other);
+
+  if(!other_type)
+    return { nullptr, illegal_operation().error };
+
+  if(other_type->value == 0) {
+    return { nullptr, std::make_shared<RTException>(
+      other_type->context,
+      other_type->pos_start.value(), other_type->pos_end.value(),
       "modulus by zero"
     ) };
   }
 
-  return { 
-    Number(std::fmod(this->value, other.value)).set_context(this->context), 
-    nullptr
-  };
+  std::shared_ptr<Value> number = std::make_shared<Number>(std::fmod(this->value, other_type->value));
+  number->set_context(this->context);
+  return { number, nullptr };
 }
 
-NumberPair Number::eq_comp(const Number& other) const {
-  return {
-    Number(static_cast<int>(value == other.value))
-      .set_context(context),
-    nullptr
-  };
+ValuePair Number::eq_comp(const std::shared_ptr<Value>& other) const {
+  auto other_type = std::dynamic_pointer_cast<Number>(other);
+
+  if(!other_type)
+    return { nullptr, illegal_operation().error };
+
+  std::shared_ptr<Value> number = std::make_shared<Number>(
+    static_cast<int>(value == other_type->value)
+  );
+  number->set_context(context);
+  return { number, nullptr };
 }
 
-NumberPair Number::ne_comp(const Number& other) const {
-  return {
-    Number(static_cast<int>(value != other.value))
-      .set_context(context),
-    nullptr
-  };
+ValuePair Number::ne_comp(const std::shared_ptr<Value>& other) const {
+  auto other_type = std::dynamic_pointer_cast<Number>(other);
+
+  if(!other_type)
+    return { nullptr, illegal_operation().error };
+
+  std::shared_ptr<Value> number = std::make_shared<Number>(
+    static_cast<int>(value != other_type->value)
+  );
+  number->set_context(context);
+  return { number, nullptr };
 }
 
-NumberPair Number::lt_comp(const Number& other) const {
-  return {
-    Number(static_cast<int>(value < other.value))
-      .set_context(context),
-    nullptr
-  };
+ValuePair Number::lt_comp(const std::shared_ptr<Value>& other) const {
+  auto other_type = std::dynamic_pointer_cast<Number>(other);
+
+  if(!other_type)
+    return { nullptr, illegal_operation().error };
+
+  std::shared_ptr<Value> number = std::make_shared<Number>(
+    static_cast<int>(value < other_type->value)
+  );
+  number->set_context(context);
+  return { number, nullptr };
 }
 
-NumberPair Number::gt_comp(const Number& other) const {
-  return {
-    Number(static_cast<int>(value > other.value))
-      .set_context(context),
-    nullptr
-  };
+ValuePair Number::gt_comp(const std::shared_ptr<Value>& other) const {
+  auto other_type = std::dynamic_pointer_cast<Number>(other);
+
+  if(!other_type)
+    return { nullptr, illegal_operation().error };
+
+  std::shared_ptr<Value> number = std::make_shared<Number>(
+    static_cast<int>(value > other_type->value)
+  );
+  number->set_context(context);
+  return { number, nullptr };
 }
 
-NumberPair Number::lte_comp(const Number& other) const {
-  return {
-    Number(static_cast<int>(value <= other.value))
-      .set_context(context),
-    nullptr
-  };
+ValuePair Number::lte_comp(const std::shared_ptr<Value>& other) const {
+  auto other_type = std::dynamic_pointer_cast<Number>(other);
+
+  if(!other_type)
+    return { nullptr, illegal_operation().error };
+
+  std::shared_ptr<Value> number = std::make_shared<Number>(
+    static_cast<int>(value <= other_type->value)
+  );
+  number->set_context(context);
+  return { number, nullptr };
 }
 
-NumberPair Number::gte_comp(const Number& other) const {
-  return {
-    Number(static_cast<int>(value >= other.value))
-      .set_context(context),
-    nullptr
-  };
+ValuePair Number::gte_comp(const std::shared_ptr<Value>& other) const {
+  auto other_type = std::dynamic_pointer_cast<Number>(other);
+
+  if(!other_type)
+    return { nullptr, illegal_operation().error };
+
+  std::shared_ptr<Value> number = std::make_shared<Number>(
+    static_cast<int>(value >= other_type->value)
+  );
+  number->set_context(context);
+  return { number, nullptr };
 }
 
-NumberPair Number::and_comp(const Number& other) const {
-  return {
-    Number(static_cast<int>(value && other.value))
-      .set_context(context),
-    nullptr
-  };
+ValuePair Number::and_comp(const std::shared_ptr<Value>& other) const {
+  auto other_type = std::dynamic_pointer_cast<Number>(other);
+
+  if(!other_type)
+    return { nullptr, illegal_operation().error };
+
+  std::shared_ptr<Value> number = std::make_shared<Number>(
+    static_cast<int>(value && other_type->value)
+  );
+  number->set_context(context);
+  return { number, nullptr };
 }
 
-NumberPair Number::or_comp(const Number& other) const {
-  return {
-    Number(static_cast<int>(value || other.value))
-      .set_context(context),
-    nullptr
-  };
+ValuePair Number::or_comp(const std::shared_ptr<Value>& other) const {
+  auto other_type = std::dynamic_pointer_cast<Number>(other);
+
+  if(!other_type)
+    return { nullptr, illegal_operation().error };
+
+  std::shared_ptr<Value> number = std::make_shared<Number>(
+    static_cast<int>(value || other_type->value)
+  );
+  number->set_context(context);
+  return { number, nullptr };
 }
 
-NumberPair Number::not_operator() const {
-  return {
-    Number(
-      (value == 0) ? 1 : 0
-    ).set_context(context),
-    nullptr
-  };
+ValuePair Number::not_operator() const {
+  std::shared_ptr<Value> number = std::make_shared<Number>(
+    (value == 0) ? 1 : 0
+  );
+  number->set_context(context);
+  return { number, nullptr };
+}
+
+RTResult Function::execute(const std::vector<std::shared_ptr<Value>>& args) {
+  RTResult res;
+  Interpreter interpreter;
+
+  Context new_context(
+    name,
+    std::make_shared<Context>(this->context.value()),
+    pos_start.value()
+  );
+  new_context.symbol_table = std::make_shared<SymbolTable>(
+    new_context.parent.value()->symbol_table
+  );
+
+  if(static_cast<int>(args.size()) > static_cast<int>(arg_names.size())) {
+    return res.failure(std::make_shared<RTException>(
+      context,
+      pos_start.value(), pos_end.value(),
+      std::to_string(static_cast<int>(args.size()) - static_cast<int>(arg_names.size()))
+      + " too many arguments passed into " + name
+    ));
+  }
+
+  if(static_cast<int>(args.size()) < static_cast<int>(arg_names.size())) {
+    return res.failure(std::make_shared<RTException>(
+      context,
+      pos_start.value(), pos_end.value(),
+      std::to_string(static_cast<int>(args.size()) - static_cast<int>(arg_names.size()))
+      + " too few arguments passed into " + name
+    ));
+  }
+
+  for(int i=0; i<static_cast<int>(args.size()); i++) {
+    std::string arg_name = arg_names.at(i);
+    std::shared_ptr<Value> arg_value = args.at(i);
+    arg_value->set_context(new_context);
+    new_context.symbol_table->set(arg_name, arg_value);
+  }
+
+  std::shared_ptr<Value> value = res.register_(interpreter.visit(body, new_context));
 }
 
 bool Number::is_true() const {
@@ -219,23 +430,29 @@ RTResult Interpreter::visit_VarAccessNode(const VarAccessNode& node, Context& co
     using T = std::decay_t<decltype(val)>;
 
     if constexpr (std::is_same_v<T, int>) {
-      return res.success(
-        Number(static_cast<double>(val))
-        .set_context(context)
-        .set_pos(node.pos_start, node.pos_end)
-      );
+      auto number = Number(static_cast<double>(val));
+      number.set_context(context);
+      number.set_pos(node.pos_start, node.pos_end);
+
+      return res.success(std::make_shared<Number>(number));
     } else if constexpr (std::is_same_v<T, double>) {
-      return res.success(
-        Number(val)
-        .set_context(context)
-        .set_pos(node.pos_start, node.pos_end)
-      );
+      auto number = Number(val);
+      number.set_context(context);
+      number.set_pos(node.pos_start, node.pos_end);
+
+      return res.success(std::make_shared<Number>(number));
     } else if constexpr (std::is_same_v<T, std::shared_ptr<Number>>) {
-      return res.success(
-        Number(std::get<double>(val->get_value()))
-        .set_context(context)
-        .set_pos(node.pos_start, node.pos_end)
-      );
+      auto number = Number(val->value);
+      number.set_context(context);
+      number.set_pos(node.pos_start, node.pos_end);
+
+      return res.success(std::make_shared<Number>(number));
+    } else if constexpr (std::is_same_v<T, std::shared_ptr<Function>>) {
+      auto function = Function(val->name, val->body, val->arg_names);
+      function.set_context(context);
+      function.set_pos(node.pos_start, node.pos_end);
+
+      return res.success(std::make_shared<Function>(function));
     } else {
       throw std::runtime_error("visit_VarAccessNode");
     }
@@ -249,7 +466,7 @@ RTResult Interpreter::visit_VarAssignNode(const VarAssignNode& node, Context& co
   std::string var_name = std::get<std::string>(tok_val);
 
   RTResult value_expr = visit(node.value_node, context);
-  Number value = res.register_(value_expr);
+  std::shared_ptr<Value> value = res.register_(value_expr);
 
 
   if(res.error) return res;
@@ -308,73 +525,157 @@ RTResult Interpreter::visit_BinOpNode(const BinOpNode& node, Context& context) c
   std::shared_ptr<Exception> error;
 
   if(node.op_tok.type == PLS_T) {
-    const auto&[res, err] = left.added_to(right);
-    result = res;
+    const auto&[res, err] = left.added_to(std::make_shared<Number>(right));
+
+    auto res_type = std::dynamic_pointer_cast<Number>(res);
+
+    if(!res_type)
+      throw std::runtime_error("visit_BinOpNode, line 485");
+
+    result = *res_type;
     error = err;
 
   } else if(node.op_tok.type == MIN_T) {
-    const auto&[res, err] = left.subbed_by(right);
-    result = res;
+    const auto&[res, err] = left.subbed_by(std::make_shared<Number>(right));
+
+    auto res_type = std::dynamic_pointer_cast<Number>(res);
+
+    if(!res_type)
+      throw std::runtime_error("visit_BinOpNode, line 496");
+
+    result = *res_type;
     error = err;
 
   } else if(node.op_tok.type == MUL_T) {
-    const auto&[res, err] = left.multiplied_by(right);
-    result = res;
+    const auto&[res, err] = left.multiplied_by(std::make_shared<Number>(right));
+
+    auto res_type = std::dynamic_pointer_cast<Number>(res);
+
+    if(!res_type)
+      throw std::runtime_error("visit_BinOpNode, line 507");
+
+    result = *res_type;
     error = err;
 
   } else if(node.op_tok.type == DIV_T) {
-    const auto&[res, err] = left.divided_by(right);
-    result = res;
+    const auto&[res, err] = left.divided_by(std::make_shared<Number>(right));
+
+    auto res_type = std::dynamic_pointer_cast<Number>(res);
+
+    if(!res_type)
+      throw std::runtime_error("visit_BinOpNode, line 518");
+
+    result = *res_type;
     error = err;
 
   } else if(node.op_tok.type == POW_T) {
-    const auto&[res, err] = left.powed_by(right);
-    result = res;
+    const auto&[res, err] = left.powed_by(std::make_shared<Number>(right));
+
+    auto res_type = std::dynamic_pointer_cast<Number>(res);
+
+    if(!res_type)
+      throw std::runtime_error("visit_BinOpNode, line 529");
+
+    result = *res_type;
     error = err;
 
   } else if(node.op_tok.type == MOD_T) {
-    const auto&[res,err] = left.modded_by(right);
-    result = res;
+    const auto&[res, err] = left.modded_by(std::make_shared<Number>(right));
+
+    auto res_type = std::dynamic_pointer_cast<Number>(res);
+
+    if(!res_type)
+      throw std::runtime_error("visit_BinOpNode, line 540");
+
+    result = *res_type;
     error = err;
 
   } else if(node.op_tok.type == EE_T) {
-    const auto&[res, err] = left.eq_comp(right);
-    result = res;
+    const auto&[res, err] = left.eq_comp(std::make_shared<Number>(right));
+
+    auto res_type = std::dynamic_pointer_cast<Number>(res);
+
+    if(!res_type)
+      throw std::runtime_error("visit_BinOpNode, line 540");
+
+    result = *res_type;
     error = err;
 
   } else if(node.op_tok.type == NE_T) {
-    const auto&[res, err] = left.ne_comp(right);
-    result = res;
+    const auto&[res, err] = left.ne_comp(std::make_shared<Number>(right));
+
+    auto res_type = std::dynamic_pointer_cast<Number>(res);
+
+    if(!res_type)
+      throw std::runtime_error("visit_BinOpNode, line 562");
+
+    result = *res_type;
     error = err;
 
   } else if(node.op_tok.type == LT_T) {
-    const auto&[res, err] = left.lt_comp(right);
-    result = res;
+    const auto&[res, err] = left.lt_comp(std::make_shared<Number>(right));
+
+    auto res_type = std::dynamic_pointer_cast<Number>(res);
+
+    if(!res_type)
+      throw std::runtime_error("visit_BinOpNode, line 573");
+
+    result = *res_type;
     error = err;
 
   } else if(node.op_tok.type == GT_T) {
-    const auto&[res, err] = left.gt_comp(right);
-    result = res;
+    const auto&[res, err] = left.gt_comp(std::make_shared<Number>(right));
+
+    auto res_type = std::dynamic_pointer_cast<Number>(res);
+
+    if(!res_type)
+      throw std::runtime_error("visit_BinOpNode, line 584");
+
+    result = *res_type;
     error = err;
 
   } else if(node.op_tok.type == LTE_T) {
-    const auto&[res, err] = left.lte_comp(right);
-    result = res;
+    const auto&[res, err] = left.lte_comp(std::make_shared<Number>(right));
+
+    auto res_type = std::dynamic_pointer_cast<Number>(res);
+
+    if(!res_type)
+      throw std::runtime_error("visit_BinOpNode, line 595");
+
+    result = *res_type;
     error = err;
 
   } else if(node.op_tok.type == GTE_T) {
-    const auto&[res, err] = left.gte_comp(right);
-    result = res;
+    const auto&[res, err] = left.gte_comp(std::make_shared<Number>(right));
+
+    auto res_type = std::dynamic_pointer_cast<Number>(res);
+
+    if(!res_type)
+      throw std::runtime_error("visit_BinOpNode, line 606");
+
+    result = *res_type;
     error = err;
 
   } else if(node.op_tok.matches(KWD_T, "and")) {
-    const auto&[res, err] = left.and_comp(right);
-    result = res;
+    const auto&[res, err] = left.and_comp(std::make_shared<Number>(right));
+
+    auto res_type = std::dynamic_pointer_cast<Number>(res);
+
+    if(!res_type)
+      throw std::runtime_error("visit_BinOpNode, line 617");
+
+    result = *res_type;
     error = err;
 
   } else if(node.op_tok.matches(KWD_T, "or")) {
-    const auto&[res, err] = left.or_comp(right);
-    result = res;
+    const auto&[res, err] = left.or_comp(std::make_shared<Number>(right));
+
+    auto res_type = std::dynamic_pointer_cast<Number>(res);
+
+    if(!res_type)
+      throw std::runtime_error("visit_BinOpNode, line 628");
+
+    result = *res_type;
     error = err;
 
   }
@@ -395,15 +696,25 @@ RTResult Interpreter::visit_UnaryOpNode(const UnaryOpNode& node, Context& contex
   std::shared_ptr<Exception> err;
 
   if(node.op_tok.type == MIN_T) {
-    const auto&[result, error] = number.multiplied_by(Number(-1));
+    const auto&[result, error] = number.multiplied_by(std::make_shared<Number>(-1));
 
-    number = result.value();
+    auto downcasted_ptr = std::dynamic_pointer_cast<Number>(result);
+
+    if(!downcasted_ptr)
+      throw std::runtime_error("visit_UnaryOpNode, line 657");
+
+    number = downcasted_ptr->value;
     err = error;
 
   } else if(node.op_tok.matches(KWD_T, "not")) {
     const auto&[result, error] = number.not_operator();
 
-    number = result.value();
+    auto downcasted_ptr = std::dynamic_pointer_cast<Number>(result);
+
+    if(!downcasted_ptr)
+      throw std::runtime_error("visit_UnaryOpNode, line 663");
+
+    number = downcasted_ptr->value;
     err = error;
   }
 

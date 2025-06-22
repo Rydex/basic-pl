@@ -38,6 +38,14 @@ RTResult WhileNode::accept(const Interpreter& visitor, Context& context) {
   return visitor.visit_WhileNode(*this, context);
 }
 
+RTResult FuncDefNode::accept(const Interpreter& visitor, Context& context) {
+  return visitor.visit_FuncDefNode(*this, context);
+}
+
+RTResult CallNode::accept(const Interpreter& visitor, Context& context) {
+  return visitor.visit_CallNode(*this, context);
+}
+
 // end visitors
 
 UnaryOpNode::UnaryOpNode(

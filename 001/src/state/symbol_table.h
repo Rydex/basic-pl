@@ -13,6 +13,9 @@ private:
   std::shared_ptr<SymbolTable> parent = nullptr;
   std::unordered_map<std::string, TokenValue> symbols{};
 public:
+  SymbolTable(const std::shared_ptr<SymbolTable>& parent = nullptr)
+    : parent(parent) {}
+
   std::optional<TokenValue> get(const std::string& name) const;
 
   void remove(const std::string& name);
