@@ -213,6 +213,11 @@ struct CallNode : public ASTNode {
     pos_end(static_cast<int>(arguments.size()) > 0 ? arguments.back()->get_pos_end()
                                                    : to_call->get_pos_end())
     {} // yes i know this code is horrible but plz bear with me
+
+  RTResult accept(const Interpreter& visitor, Context& context) override;
+
+  inline Position get_pos_start() const override { return pos_start; }
+  inline Position get_pos_end() const override { return pos_end; }
 };
 
 #endif

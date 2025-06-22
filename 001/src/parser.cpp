@@ -63,7 +63,7 @@ ParseResult Parser::parse() {
 }
 
 ParseResult Parser::power() {
-  return bin_op([this]() { return atom(); }, { POW_T, MOD_T }, [this]() { return factor(); });
+  return bin_op([this]() { return call(); }, { POW_T, MOD_T }, [this]() { return factor(); });
 }
 
 ParseResult Parser::if_expr() {
@@ -247,6 +247,153 @@ ParseResult Parser::while_expr() {
   return res.success(std::make_shared<WhileNode>(condition, body));
 }
 
+ParseResult Parser::func_def() {
+  ParseResult res;
+
+  if(!cur_tok->matches(KWD_T, "def")) {
+    return res.failure(std::make_shared<InvalidSyntaxException>(
+      cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+      "expected 'def', got " + cur_tok->type
+    ));
+  }
+
+  res.register_advance();
+  advance();
+
+  std::optional<Token> var_name_tok;
+  if(cur_tok->type == ID_T) {
+    var_name_tok = cur_tok.value();
+    res.register_advance();
+    advance();
+
+    if(cur_tok->type != LPR_T) {
+      return res.failure(std::make_shared<InvalidSyntaxException>(
+        cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+        "expected '(', got " + cur_tok->type
+      ));
+    }
+  } else {
+    var_name_tok = std::nullopt;
+
+    if(cur_tok->type != LPR_T) {
+      return res.failure(std::make_shared<InvalidSyntaxException>(
+        cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+        "expected identifier or '(', got " + cur_tok->type
+      ));
+    }
+  }
+
+  res.register_advance();
+  advance();
+  std::vector<Token> arg_name_toks = {};
+
+  if(cur_tok->type == ID_T) {
+    arg_name_toks.emplace_back(cur_tok.value());
+
+    res.register_advance();
+    advance();
+
+    while(cur_tok->type == COM_T) {
+      res.register_advance();
+      advance();
+
+      if(cur_tok->type != ID_T) {
+        return res.failure(std::make_shared<InvalidSyntaxException>(
+          cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+          "expected identifier, got " + cur_tok->type
+        ));
+      }
+
+      arg_name_toks.emplace_back(cur_tok.value());
+      res.register_advance();
+      advance();
+    }
+
+    if(cur_tok->type != RPR_T) {
+      return res.failure(std::make_shared<InvalidSyntaxException>(
+        cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+        "expected ',' or ')', got " + cur_tok->type
+      ));
+    }
+  } else {
+    if(cur_tok->type != RPR_T) {
+      return res.failure(std::make_shared<InvalidSyntaxException>(
+        cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+        "expected identifier or ')', got " + cur_tok->type
+      ));
+    }
+  }
+
+  res.register_advance();
+  advance();
+
+  if(cur_tok->type != ARW_T) {
+    return res.failure(std::make_shared<InvalidSyntaxException>(
+      cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+      "expected '->', got " + cur_tok->type
+    ));
+  }
+
+  res.register_advance();
+  advance();
+
+  std::shared_ptr<ASTNode> to_return = res.register_(expr());
+  if(res.error) return res;
+
+  return res.success(std::make_shared<FuncDefNode>(
+    var_name_tok.value(), arg_name_toks, to_return
+  ));
+}
+
+ParseResult Parser::call() {
+  ParseResult res;
+  std::shared_ptr<ASTNode> atom_node = res.register_(atom());
+  if(res.error) return res;
+
+  std::vector<std::shared_ptr<ASTNode>> arg_nodes = {};
+  if(cur_tok->type == LPR_T) {
+    res.register_advance();
+    advance();
+
+    if(cur_tok->type == RPR_T) {
+      res.register_advance();
+      advance();
+    } else {
+      arg_nodes.emplace_back(res.register_(expr()));
+
+      if(res.error)
+        return res.failure(std::make_shared<InvalidSyntaxException>(
+          cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+          "expected ')', 'var', 'if', 'for', 'while', 'def', int, float, identifier, '+', '-', '(' or 'not', got " + cur_tok->type
+        ));
+
+      while(cur_tok->type == COM_T) {
+        res.register_advance();
+        advance();
+
+        arg_nodes.emplace_back(res.register_(expr()));
+        if(res.error) return res;
+      }
+
+      if(cur_tok->type != RPR_T) {
+        return res.failure(std::make_shared<InvalidSyntaxException>(
+          cur_tok->pos_start.value(), cur_tok->pos_end.value(),
+          "expected ',' or ')', got " + cur_tok->type
+        ));
+      }
+
+      res.register_advance();
+      advance();
+    }
+
+    return res.success(std::make_shared<CallNode>(
+      res.register_(atom()), arg_nodes
+    ));
+  }
+
+  return res.success(res.register_(atom()));
+}
+
 ParseResult Parser::atom() {
   ParseResult res;
   Token tok = cur_tok.value();
@@ -298,6 +445,12 @@ ParseResult Parser::atom() {
 
     if(res.error) return res;
     return res.success(while_expr_res);
+
+  } else if(cur_tok->matches(KWD_T, "def")) {
+    std::shared_ptr<ASTNode> func_def_res = res.register_(func_def());
+
+    if(res.error) return res;
+    return res.success(func_def_res);
   }
   
   return res.failure(std::make_shared<InvalidSyntaxException>(
