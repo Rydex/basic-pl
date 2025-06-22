@@ -27,12 +27,12 @@ int main() {
   do {
     std::cout << "program (type quit to quit) > ";
     std::getline(std::cin, input);
-    const auto&[ast, error] = run("<stdin>", input);
+    const auto&[result, error] = run("<stdin>", input);
 
     if(error) { // if theres an error print it as string
       std::cout << error->as_string() << '\n'; 
-    } else if(ast) {
-      std::visit(handle_nodes, ast.value());
+    } else if(result) {
+      std::visit(handle_nodes, result.value());
     }
   } while (input != "quit");
 }

@@ -205,6 +205,8 @@ RunType run(
 
   if(result.error) {
     return { std::nullopt, result.error };
+  } else if(!result.value && !result.error) {
+    return { std::nullopt, nullptr };
   }
 
   return { result.value.value(), nullptr };
