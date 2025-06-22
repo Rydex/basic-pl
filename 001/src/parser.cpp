@@ -372,7 +372,7 @@ ParseResult Parser::expr() {
     if(cur_tok->type != ID_T) {
       return res.failure(std::make_shared<InvalidSyntaxException>(
         cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-        "expected identifier after 'var'"
+        "expected identifier after 'var', got " + cur_tok->type
       ));
     }
 
@@ -383,7 +383,7 @@ ParseResult Parser::expr() {
     if(cur_tok->type != EQU_T) {
       return res.failure(std::make_shared<InvalidSyntaxException>(
         cur_tok->pos_start.value(), cur_tok->pos_end.value(),
-        "expected '=' after identifier"
+        "expected '=' after identifier, got " + cur_tok->type
       ));
     }
 
