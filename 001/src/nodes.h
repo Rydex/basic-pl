@@ -169,4 +169,51 @@ struct WhileNode : public ASTNode {
   inline Position get_pos_end() const override { return pos_end; }
 };
 
+struct FuncDefNode : public ASTNode {
+  std::optional<Token> var_name_tok;
+  std::vector<Token> arg_name_toks;
+  std::shared_ptr<ASTNode> body_node;
+  std::optional<Position> pos_start, pos_end;
+
+  FuncDefNode(
+    const std::optional<Token>& var_name_tok,
+    const std::vector<Token>& arg_name_toks,
+    const std::shared_ptr<ASTNode>& body_node
+  )
+    : var_name_tok(var_name_tok), arg_name_toks(arg_name_toks),
+    body_node(body_node) {
+      if(var_name_tok)
+        pos_start = var_name_tok->pos_start.value();
+      else if(arg_name_toks.size() > 0)
+        pos_start = arg_name_toks.at(0).pos_start.value();
+      else
+        pos_start = body_node->get_pos_start();
+
+      pos_end = body_node->get_pos_end();
+  }
+
+  RTResult accept(const Interpreter& visitor, Context& context) override;
+
+  inline Position get_pos_start() const override { return pos_start.value(); }
+  inline Position get_pos_end() const override { return pos_end.value(); }
+};
+
+struct CallNode : public ASTNode {
+  std::shared_ptr<ASTNode> to_call;
+  std::vector<std::shared_ptr<ASTNode>> arg_nodes;
+  std::optional<Position> pos_start, pos_end;
+
+  CallNode(
+    const std::shared_ptr<ASTNode>& to_call,
+    const std::vector<std::shared_ptr<ASTNode>>& arg_nodes
+  ): to_call(to_call), arg_nodes(arg_nodes) {
+    pos_start = to_call->get_pos_start();
+
+    if(arg_nodes.size() > 0)
+      pos_end = arg_nodes.back()->get_pos_end();
+    else
+      pos_end = to_call->get_pos_end();
+  }
+};
+
 #endif
