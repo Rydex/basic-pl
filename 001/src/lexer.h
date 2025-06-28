@@ -30,9 +30,7 @@ const std::string PLS_T = "plus",
                   LT_T  = "less-than",
                   GT_T  = "greater-than",
                   LTE_T = "less-than-or-equal",
-                  GTE_T = "greater-than-or-equal",
-                  COM_T = "comma",
-                  ARW_T = "arrow";
+                  GTE_T = "greater-than-or-equal";
 
 const std::vector<std::string> KEYWORDS = {
   "var",
@@ -47,8 +45,7 @@ const std::vector<std::string> KEYWORDS = {
   "to",
   "step",
   "while",
-  "do",
-  "def"
+  "do"
 };
 
 using VectorPair = std::pair<std::vector<Token>, std::shared_ptr<Exception>>;
@@ -73,7 +70,6 @@ public:
   Token make_equals();
   Token make_lt();
   Token make_gt();
-  Token make_minus_or_arrow();
 };
 
 using RunType = std::pair<std::optional<RTVariant>, std::shared_ptr<Exception>>;
