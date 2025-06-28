@@ -47,7 +47,8 @@ const std::vector<std::string> KEYWORDS = {
   "to",
   "step",
   "while",
-  "do"
+  "do",
+  "def"
 };
 
 using VectorPair = std::pair<std::vector<Token>, std::shared_ptr<Exception>>;
