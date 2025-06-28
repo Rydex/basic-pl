@@ -15,7 +15,7 @@ using TokenValue = std::variant<int, double, std::string, std::shared_ptr<Number
 struct Token {
   std::string type;
   std::optional<TokenValue> value;
-  std::optional<Position> pos_start, pos_end; 
+  std::optional<Position> pos_start, pos_end;
 
   Token(
     const std::string& type,

@@ -467,7 +467,7 @@ RTResult Interpreter::visit_ForNode(const ForNode& node, Context& context) const
   while(condition()) {
     context.symbol_table->set(
       std::get<std::string>(node.var_name_tok.value.value()),
-      i
+      std::make_shared<Number>(i)
     );
 
     i += std::get<double>(step_value.get_value());
